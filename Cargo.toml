@@ -1,0 +1,2 @@
+[workspace]
+members = ["ormx-macros", "ormx", "example"]

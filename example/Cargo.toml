@@ -1,0 +1,19 @@
+[package]
+name = "example"
+version = "0.1.0"
+authors = ["moritz"]
+edition = "2018"
+
+[dependencies]
+ormx = { path = "../ormx", features = ["mysql"] }
+tokio = { version = "0.2", features = ["full"] }
+anyhow = "1"
+dotenv = "0.15"
+chrono = "0.4"
+simple_logger = "1"
+log = "0.4"
+
+[dependencies.sqlx]
+version = "0.4.0-beta.1"
+default-features = false
+features = ["macros", "mysql", "runtime-tokio", "chrono"]
