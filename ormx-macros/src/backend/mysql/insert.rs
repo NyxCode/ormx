@@ -3,10 +3,11 @@ use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Ident;
+use crate::attrs::Insertable;
 
 pub fn impl_insert(table: &Table) -> TokenStream {
     let insert_ident = match &table.insertable {
-        Some(i) => i,
+        Some(i) => &i.ident,
         None => return quote!(),
     };
 
@@ -80,7 +81,7 @@ pub fn impl_insert(table: &Table) -> TokenStream {
 }
 
 pub fn insert_struct(table: &Table) -> TokenStream {
-    let ident = match &table.insertable {
+    let Insertable { ident, attrs } = match &table.insertable {
         Some(i) => i,
         None => return quote!(),
     };
@@ -92,6 +93,7 @@ pub fn insert_struct(table: &Table) -> TokenStream {
     });
 
     quote! {
+        #(#attrs)*
         #vis struct #ident {
             #( #insert_fields, )*
         }

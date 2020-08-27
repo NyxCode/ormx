@@ -1,5 +1,5 @@
 use super::{Table, TableField};
-use crate::attrs::{parse_attrs, TableAttr, TableFieldAttr};
+use crate::attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr};
 use crate::utils::{missing_attr, set_once};
 use proc_macro2::Span;
 use std::convert::TryFrom;
@@ -71,16 +71,16 @@ impl TryFrom<&syn::DeriveInput> for Table {
 
         none!(table, id, insertable);
         for attr in parse_attrs::<TableAttr>(&value.attrs)? {
-            #[allow(unreachable_patterns)]
             match attr {
                 TableAttr::Table(x) => set_once(&mut table, x)?,
                 TableAttr::Id(x) => set_once(&mut id, x)?,
                 TableAttr::Insertable(x) => {
-                    let default =
-                        || Ident::new(&format!("Insert{}", value.ident), Span::call_site());
+                    let default = || Insertable {
+                        attrs: vec![],
+                        ident: Ident::new(&format!("Insert{}", value.ident), Span::call_site()),
+                    };
                     set_once(&mut insertable, x.unwrap_or_else(default))?;
                 }
-                _ => return Err(Error::new(Span::call_site(), "unexpected attribute")),
             }
         }
 

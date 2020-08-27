@@ -1,4 +1,4 @@
-use crate::attrs::Getter;
+use crate::attrs::{Getter, Insertable};
 use crate::backend::{Backend, Implementation};
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
@@ -15,7 +15,7 @@ pub struct Table {
     pub table: String,
     pub id: TableField,
     pub fields: Vec<TableField>,
-    pub insertable: Option<Ident>,
+    pub insertable: Option<Insertable>,
 }
 
 #[derive(Clone)]

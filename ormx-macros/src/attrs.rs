@@ -1,4 +1,4 @@
-use syn::parse::{Parse, ParseStream};
+use syn::parse::{Parse, ParseStream, ParseBuffer};
 use syn::punctuated::Punctuated;
 use syn::{Attribute, Ident, Path, Result, Token, Type};
 
@@ -7,8 +7,13 @@ pub enum TableAttr {
     Table(String),
     // id = <ident>
     Id(Ident),
-    // insertable [= <ident>]?
-    Insertable(Option<Ident>),
+    // insertable [= [<attribute>]* <ident>]?
+    Insertable(Option<Insertable>),
+}
+
+pub struct Insertable {
+    pub attrs: Vec<Attribute>,
+    pub ident: Ident
 }
 
 pub enum TableFieldAttr {
@@ -65,11 +70,20 @@ impl Parse for Getter {
     }
 }
 
+impl Parse for Insertable {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self {
+            attrs: input.call(Attribute::parse_outer)?,
+            ident: input.parse()?
+        })
+    }
+}
+
 pub fn parse_attrs<A: Parse>(attrs: &[Attribute]) -> Result<Vec<A>> {
     let attrs = attrs
         .iter()
         .filter(|a| a.path.is_ident("ormx"))
-        .map(|a| a.parse_args_with(Punctuated::<A, Token![,]>::parse_separated_nonempty))
+        .map(|a| a.parse_args_with(Punctuated::<A, Token![,]>::parse_terminated))
         .collect::<Result<Vec<_>>>()?
         .into_iter()
         .flatten()
@@ -116,7 +130,7 @@ macro_rules! impl_parse {
 impl_parse!(TableAttr {
     "table" => Table(= String),
     "id" => Id(= Ident),
-    "insertable" => Insertable((= Ident)?)
+    "insertable" => Insertable((= Insertable)?)
 });
 
 impl_parse!(TableFieldAttr {
