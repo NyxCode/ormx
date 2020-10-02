@@ -7,7 +7,6 @@ description = "lightweight procedural macros bringing orm-like features to sqlx"
 homepage = "https://github.com/NyxCode/ormx"
 license = "MIT"
 
-
 [lib]
 proc-macro = true
 

@@ -7,12 +7,13 @@ Lightweight macros for [sqlx](https://github.com/launchbadge/sqlx)
 Add `ormx` and `sqlx` to your `Cargo.toml`
 ```toml
 [dependencies.ormx]
-git = "https://github.com/NyxCode/ormx"
+default-features = false
+version = "0.0.1-alpha.1"
 features = ["mysql"]
 
 [dependencies.sqlx]
 version = "0.4.0-beta.1"
-features = ["macros", "mysql"]
+features = ["macros", "mysql", "runtime-tokio"]
 ```
 Right now, `ormx` only supports with mysql.
 ## what does it do? 
