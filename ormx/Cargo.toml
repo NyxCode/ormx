@@ -1,6 +1,6 @@
 [package]
 name = "ormx"
-version = "0.0.1-alpha.1"
+version = "0.0.1-alpha.2"
 authors = ["Moritz Bischof"]
 edition = "2018"
 license = "MIT"
@@ -8,7 +8,7 @@ description = "lightweight procedural macros bringing orm-like features to sqlx"
 homepage = "https://github.com/NyxCode/ormx"
 
 [features]
-default = ["sqlx/runtime-tokio"]
+default = ["sqlx/runtime-tokio", "mysql"]
 mysql = ["sqlx/mysql", "ormx-macros/mysql"]
 sqlite = ["sqlx/sqlite", "ormx-macros/sqlite"]
 postgres = ["sqlx/postgres", "ormx-macros/postgres"]
