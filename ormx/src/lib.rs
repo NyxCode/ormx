@@ -28,7 +28,7 @@
 //! ```
 //!
 //! # Documentation
-//! See the docs of [derive(Table)](/ormx/derive.Table.html) and [Patch](/ormx/trait.Patch.html).
+//! See the docs of [derive(Table)](derive.Table.html) and [Patch](trait.Patch.html).
 
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
