@@ -1,5 +1,8 @@
 # ormx
-Lightweight macros for [sqlx](https://github.com/launchbadge/sqlx)
+Lightweight macros for [sqlx](https://github.com/launchbadge/sqlx)    
+
+[![Crate](https://img.shields.io/crates/v/ormx.svg)](https://crates.io/crates/ormx)
+[![API](https://docs.rs/ormx/badge.svg)](https://docs.rs/ormx)
 ## getting started
 Add `ormx` and `sqlx` to your `Cargo.toml`
 ```toml
