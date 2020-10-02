@@ -8,7 +8,9 @@ use sqlx::MySqlPool;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
-    simple_logger::init_with_level(log::Level::Info)?;
+    simple_logger::SimpleLogger::new()
+        .with_level(log::LevelFilter::Info)
+        .init()?;
 
     let db = MySqlPool::connect(&dotenv::var("DATABASE_URL")?).await?;
 
@@ -53,6 +55,7 @@ async fn main() -> anyhow::Result<()> {
 struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]
+    #[ormx(get_one = get_by_user_id)]
     user_id: u32,
     first_name: String,
     last_name: String,

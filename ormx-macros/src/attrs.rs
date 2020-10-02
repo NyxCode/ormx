@@ -1,4 +1,4 @@
-use syn::parse::{Parse, ParseStream, ParseBuffer};
+use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{Attribute, Ident, Path, Result, Token, Type};
 

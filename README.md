@@ -1,6 +1,5 @@
 # ormx
 Lightweight macros for [sqlx](https://github.com/launchbadge/sqlx)
-
 ## get started
 Add `ormx` and `sqlx` to your `Cargo.toml`
 ```toml
