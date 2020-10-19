@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 ormx = { path = "../ormx", features = ["mysql"] }
-tokio = { version = "0.3", features = ["full"] }
+tokio = { version = "0.2", features = ["full"] }
 anyhow = "1"
 dotenv = "0.15"
 chrono = "0.4"

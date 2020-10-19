@@ -38,8 +38,8 @@ pub use ormx_macros::*;
 
 #[doc(hidden)]
 pub mod exports {
+    pub use crate::query2::map::*;
     pub use futures;
-    pub use crate::query2::*;
 }
 
 #[cfg(feature = "mysql")]

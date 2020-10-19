@@ -17,6 +17,7 @@ pub(crate) async fn query_users(
             "LIMIT" ?(l)
         }
     )
-    .fetch_all(db).await?;
+    .fetch_all(db)
+    .await?;
     Ok(result)
 }

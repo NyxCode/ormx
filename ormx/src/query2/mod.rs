@@ -1,6 +1,10 @@
-use sqlx::query::Map;
-use sqlx::{Database, Executor, IntoArguments};
-use futures::stream::BoxStream;
+#[doc(hidden)]
+#[rustfmt::skip]
+pub mod map;
+#[cfg(feature = "mysql")]
+mod mysql;
+#[cfg(feature = "postgres")]
+mod postgres;
 
 /// An improved version of `sqlx::query_as!`.
 ///
@@ -43,7 +47,7 @@ use futures::stream::BoxStream;
 /// PATTERN = EXPRESSION => { (LITERAL | ?(EXPRESSION))* }
 /// ```
 /// Please note that conditions can't be nested right now.
-/// Also, the number of conditions per query is currently limited to 4.
+/// Also, the number of conditions per query is currently limited to 5.
 ///
 /// Example:
 /// ```rust,ignore
@@ -59,15 +63,56 @@ use futures::stream::BoxStream;
 ///
 #[macro_export]
 macro_rules! conditional_query_as {
-    ( $($t:tt)* ) => ( $crate::__build_query!((;;;); $($t)*) );
+    ( $($t:tt)* ) => {
+        $crate::__conditional_query_as_impl!($($t)*)
+    };
 }
 
-// create all branches necessary for the query, returning
-// return = branch,*
-// branch = (pat = expr),*; literal*; expr*
+/// Do the actual computation.
+/// # Terms
+/// - "Branch" - a possible query, given zero or more branch predicates
+/// - "Branch Predicate" - a pattern which has to match an expression for the branch to be executed
+/// - "Query Fragment" - part of a query string
+/// - "Argument" - an argument used to execute a parameterized query
+///
+/// # How does it work?
+/// This macro takes a list of all branches in this format:
+/// ```ignore
+/// (
+///     $( (PATTERN = EXPRESSION) ),*; // branch predicates
+///     $(LITERAL),*; // query fragments
+///     $( (EXPRESSIONS) ),*; // arguments
+/// )
+/// ```
+/// Then, it takes either a branch, a query fragment or an argument. In case of a query fragment or
+/// an argument, it is added to all branches and the macro recurses with the remaining tokens.
+/// When encountering a branch, all existing branches will be cloned and the content of the new
+/// branch will be added.
+/// It is important that the "old" branches are at the back of the branch list.
+///
+/// When done, this macro will product a loop which contains all branches.
+/// This will look something like this:
+/// ```ignore
+/// loop {
+///     // BRANCH 1
+///     if PATTERN = EXPRESSION { // Branch Predicate
+///         break sqlx::query_as!(..)
+///     }
+///     // Branch 2
+///     if PATTERN = EXPRESSION { // Branch Predicate
+///         break sqlx::query_as!(..)
+///     }
+/// }
+/// ```
+///
+/// Because, however, each invocation of sqlx::query_as! results in a different type, the result
+/// will be wrapped in [ConditionalMapX], where X is the count of all branches.
+/// [ConditionalMapX] is just an enum which defers to its variants when calling methods like [fetch_one].
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __build_query {
+    // --- @out_branch ---
+    // Build one branch
     (
         @out_branch
         $out:path,
@@ -101,26 +146,24 @@ macro_rules! __build_query {
             $($ae),*
         ));
     };
+
+    // --- @out ---
+    // Build branches, one by one
+    ( @out $out:path, $($v:ident),*; ; ) => {};
     (
-      @out
-      $out:path,
-      $($v:ident),*;
-      ;
-    ) => {};
-    (
-      @out
-      $out:path,
-      $vf:ident $(, $vo:ident)*;
-      (
-        $($appf:pat = $apef:expr),*;
-        $($aqf:literal),*;
-        $($aef:expr),*;
-      )
-      $(, (
-        $($appo:pat = $apeo:expr),*;
-        $($aqo:literal),*;
-        $($aeo:expr),*;
-      ))*;
+        @out
+        $out:path,
+        $vf:ident $(, $vo:ident)*;
+        (
+            $($appf:pat = $apef:expr),*;
+            $($aqf:literal),*;
+            $($aef:expr),*;
+        )
+        $(, (
+            $($appo:pat = $apeo:expr),*;
+            $($aqo:literal),*;
+            $($aeo:expr),*;
+        ))*;
     ) => {{
         $crate::__build_query!(
             @out_branch
@@ -142,16 +185,19 @@ macro_rules! __build_query {
         );
     }};
     (
-      $((
-        $($app:pat = $ape:expr),*;
-        $($aq:literal),*;
-        $($ae:expr),*;
-      )),*;
-      $out:path,
+        $((
+            $($app:pat = $ape:expr),*;
+            $($aq:literal),*;
+            $($ae:expr),*;
+        )),*;
+        $($phx:literal),*;
+        $out:path,
     ) => {{
         #[allow(unreachable_code)]
+        // TODO: remove this once sqlx 0.4 is out
+        #[allow(clippy::toplevel_ref_arg)]
         loop {
-            $crate::__import_output_variants!($(($($app=$ape),*;$($aq),*;$($ae),*;)),*);
+            $crate::__import_conditional_map!($(($($app=$ape),*;$($aq),*;$($ae),*;)),*);
             $crate::__build_query!(
                 @out
                 $out,
@@ -167,13 +213,14 @@ macro_rules! __build_query {
     }};
     // When encountering a query string, add it to all branches
     (
-      $((
-        $($app:pat = $ape:expr),*;
-        $($aq:literal),*;
-        $($ae:expr),*;
-      )),*;
-      $out:path,
-      $q:literal $($t:tt)*
+        $((
+            $($app:pat = $ape:expr),*;
+            $($aq:literal),*;
+            $($ae:expr),*;
+        )),*;
+        $($phx:literal),*;
+        $out:path,
+        $q:literal $($t:tt)*
     ) => {
         $crate::__build_query! {
             $((
@@ -181,41 +228,44 @@ macro_rules! __build_query {
                 $($aq,)* $q;
                 $($ae),*;
             )),*;
+            $($phx),*;
             $out,
             $($t)*
         }
     };
     // When encountering a query parameter, add it to all branches
     (
-      $((
-        $($app:pat = $ape:expr),*;
-        $($aq:literal),*;
-        $($ae:expr),*;
-      )),*;
-      $out:path,
-      ?($e:expr) $($t:tt)*
+        $((
+            $($app:pat = $ape:expr),*;
+            $($aq:literal),*;
+            $($ae:expr),*;
+        )),*;
+        $ph:literal $(, $phx:literal)*;
+        $out:path,
+        ?($e:expr) $($t:tt)*
     ) => {
         $crate::__build_query! {
             $((
                 $($app = $ape),*;
-                $($aq,)* "?";
+                $($aq,)* $ph;
                 $($ae,)* $e;
             )),*;
+            $($phx),*;
             $out,
             $($t)*
         }
     };
     // When encountering a branch, clone all existing branches, adding the new one.
-    // [branches] + branch = [branches] + [branches + branch]
     (
-      $((
-        $($app:pat = $ape:expr),*;
-        $($aq:literal),*;
-        $($ae:expr),*;
-      )),*;
-      $out:path,
-      $bpp:pat = $bpe:expr => { $($bq:literal $(?($be:expr))*)* }
-      $($t:tt)*
+        $((
+            $($app:pat = $ape:expr),*;
+            $($aq:literal),*;
+            $($ae:expr),*;
+        )),*;
+        $($phx:literal),*;
+        $out:path,
+        $bpp:pat = $bpe:expr => { $($bq:literal $(?($be:expr))*)* }
+        $($t:tt)*
     ) => {
         $crate::__push_fragments!(
             $((
@@ -223,6 +273,7 @@ macro_rules! __build_query {
                 $($aq),*;
                 $($ae),*;
             )),*;
+            $($phx),*;
             $out,
             $($bq),*;
             $($($be),*),*;
@@ -236,12 +287,14 @@ macro_rules! __build_query {
     };
 }
 
-// push multiple branch predicates, query fragments and parameters to all branches
+// Push multiple branch predicates, query fragments and parameters to all branches.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __push_fragments {
+    // We are done!
     (
         $(($ ($t:tt)* )),*;
+        $($phx:literal),*;
         $out:path,
         ;
         ;
@@ -250,21 +303,24 @@ macro_rules! __push_fragments {
     ) => {
         $crate::__build_query! {
             $(( $($t)* )),* $($y)*;
+            $($phx),*;
             $out,
             $($x)*
         }
     };
+    // When we encounter a literal, add it to all branches.
     (
-      $((
-        $($app:pat = $ape:expr),*;
-        $($aq:literal),*;
-        $($ae:expr),*;
-      )),*;
-      $out:path,
-      $qf:literal $(, $qo:literal)*;
-      $($qe:expr),*;
-      [$($y:tt)*];
-      $($x:tt)*
+        $((
+            $($app:pat = $ape:expr),*;
+            $($aq:literal),*;
+            $($ae:expr),*;
+        )),*;
+        $($phx:literal),*;
+        $out:path,
+        $qf:literal $(, $qo:literal)*; // <- the literal
+        $($qe:expr),*;
+        [$($y:tt)*];
+        $($x:tt)*
     ) => {
         $crate::__push_fragments!{
             $((
@@ -272,6 +328,7 @@ macro_rules! __push_fragments {
                 $($aq,)* $qf;
                 $($ae),*;
             )),*;
+            $($phx),*;
             $out,
             $($qo),*;
             $($qe),*;
@@ -279,24 +336,27 @@ macro_rules! __push_fragments {
             $($x)*
         }
     };
+    // When we encounter an argument, add it to all branches.
     (
         $((
             $($app:pat = $ape:expr),*;
             $($aq:literal),*;
             $($ae:expr),*;
         )),*;
+        $ph:literal $(, $phx:literal)*;
         $out:path,
         $($qq:literal),*;
-        $qf:expr $(, $qo:expr),*;
+        $qf:expr $(, $qo:expr),*; // <- the argument
         [$($y:tt)*];
         $($x:tt)*
     ) => {
         $crate::__push_fragments! {
             $((
                 $($app = $ape),*;
-                $($aq,)* "?";
+                $($aq,)* $ph;
                 $($ae,)* $qf;
             )),*;
+            $($phx),*;
             $out,
             $($qq),*;
             $($qo),*;
@@ -306,6 +366,7 @@ macro_rules! __push_fragments {
     };
 }
 
+// Do the actual call to sqlx::query_as!
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __sqlx_query_as {
@@ -317,96 +378,3 @@ macro_rules! __sqlx_query_as {
         sqlx::query_as!($out, $f $(+ " " + $o)*, $($e),*)
     };
 }
-
-#[doc(hidden)]
-#[macro_export]
-#[rustfmt::skip]
-macro_rules! __import_output_variants {
-    (($($a:tt)*)) => (use $crate::exports::ConditionalMap1::*;);
-    (($($a:tt)*), ($($b:tt)*)) => (use $crate::exports::ConditionalMap2::*;);
-    (($($a:tt)*), ($($b:tt)*), ($($c:tt)*), ($($d:tt)*)) => (use $crate::exports::ConditionalMap4::*;);
-    (($($a:tt)*), ($($b:tt)*), ($($c:tt)*), ($($d:tt)*), ($($e:tt)*), ($($f:tt)*), ($($g:tt)*), ($($h:tt)*)) => (use $crate::exports::ConditionalMap8::*;);
-    (($($a:tt)*), ($($b:tt)*), ($($c:tt)*), ($($d:tt)*), ($($e:tt)*), ($($f:tt)*), ($($g:tt)*), ($($h:tt)*),
-    ($($i:tt)*), ($($j:tt)*), ($($k:tt)*), ($($l:tt)*), ($($m:tt)*), ($($n:tt)*), ($($o:tt)*), ($($p:tt)*)) => (use $crate::exports::ConditionalMap16::*;);
-}
-
-macro_rules! make_conditional_map_ty {
-    ($i:ident: $($fi:ident: $ff:ident, $fa:ident),*) => {
-        pub enum $i<'q, DB, O, $($ff, $fa,)*>
-        where
-            DB: Database,
-            O: Send + Unpin,
-            $(
-                $ff: Send + Sync + Fn(DB::Row) -> sqlx::Result<O>,
-                $fa: 'q + Send + IntoArguments<'q, DB>,
-            )*
-        {
-            $($fi(Map<'q, DB, $ff, $fa>)),*
-        }
-        impl<'q, DB, O, $($ff, $fa,)*> $i<'q, DB, O, $($ff, $fa,)*>
-        where
-            DB: Database,
-            O: Send + Unpin,
-            $(
-                $ff: Send + Sync + Fn(DB::Row) -> sqlx::Result<O>,
-                $fa: 'q + Send + IntoArguments<'q, DB>,
-            )*
-        {
-            pub fn fetch<'e, 'c: 'e, E>(self, executor: E) -> BoxStream<'e, sqlx::Result<O>>
-            where
-                'q: 'e,
-                E: 'e + Executor<'c, Database = DB>,
-                DB: 'e,
-                O: 'e,
-                $($ff: 'e),*
-            {
-                match self { $(
-                    Self::$fi(x) => x.fetch(executor)
-                ),* }
-            }
-            pub async fn fetch_all<'e, 'c: 'e, E>(self, executor: E) -> sqlx::Result<Vec<O>>
-            where
-                'q: 'e,
-                DB: 'e,
-                E: 'e + Executor<'c, Database = DB>,
-                O: 'e
-            {
-               match self { $(
-                        Self::$fi(x) => x.fetch_all(executor).await
-               ),* }
-            }
-            pub async fn fetch_one<'e, 'c: 'e, E>(self, executor: E) -> sqlx::Result<O>
-            where
-                'q: 'e,
-                E: 'e + Executor<'c, Database = DB>,
-                DB: 'e,
-                O: 'e,
-            {
-                match self { $(
-                    Self::$fi(x) => x.fetch_one(executor).await
-                ),* }
-            }
-            pub async fn fetch_optional<'e, 'c: 'e, E>(self, executor: E) -> sqlx::Result<Option<O>>
-            where
-                'q: 'e,
-                E: 'e + Executor<'c, Database = DB>,
-                DB: 'e,
-                O: 'e,
-            {
-                match self { $(
-                    Self::$fi(x) => x.fetch_optional(executor).await
-                ),* }
-            }
-        }
-    };
-}
-
-// When constructing a conditional query, the number of branches is 2^(number of patterns), since
-// every pattern doubles the number of branches. Let's support 16 branches, equal to 4 patterns per
-// query, for now.
-#[rustfmt::skip] make_conditional_map_ty!(ConditionalMap1: _1: F1, A1);
-#[rustfmt::skip] make_conditional_map_ty!(ConditionalMap2: _1: F1, A1, _2: F2, A2);
-#[rustfmt::skip] make_conditional_map_ty!(ConditionalMap4: _1: F1, A1, _2: F2, A2, _3: F3, A3, _4: F4, A4);
-#[rustfmt::skip] make_conditional_map_ty!(ConditionalMap8: _1: F1, A1, _2: F2, A2, _3: F3, A3, _4: F4, A4, _5: F5, A5, _6: F6, A6, _7: F7, A7, _8: F8, A8);
-#[rustfmt::skip] make_conditional_map_ty!(ConditionalMap16: _1: F1, A1, _2: F2, A2, _3: F3, A3, _4: F4, A4, _5: F5, A5, _6: F6, A6, _7: F7, A7, _8: F8, A8, _9: F9, A9, _10: F10, A10, _11: F11, A11, _12: F12, A12, _13: F13, A13, _14: F14, A14, _15: F15, A15, _16: F16, A16);
-
