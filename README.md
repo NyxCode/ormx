@@ -15,7 +15,7 @@ features = ["mysql"]
 version = "0.4.0-beta.1"
 features = ["macros", "mysql", "runtime-tokio"]
 ```
-Right now, `ormx` only supports with mysql.
+Right now, `ormx` only supports mysql.
 ## what does it do? 
 `ormx` provides macros for generating commonly used sql queries at compile time.  
 `ormx` is meant to be used together with `sqlx`. Everything it generates uses `sqlx::query!` under the hood, so every generated query will be checked against your database at compile time.  
