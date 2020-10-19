@@ -1,9 +1,9 @@
+use crate::attrs::Insertable;
 use crate::table::{Table, TableField};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Ident;
-use crate::attrs::Insertable;
 
 pub fn impl_insert(table: &Table) -> TokenStream {
     let insert_ident = match &table.insertable {

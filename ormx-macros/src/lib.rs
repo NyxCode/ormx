@@ -22,6 +22,7 @@ mod utils;
 ///     email: String,
 ///     #[ormx(default, set)]
 ///     last_login: Option<NaiveDateTime>,
+/// }
 /// ```
 ///
 /// # The ID
@@ -51,11 +52,16 @@ mod utils;
 /// the value of the annotated field.
 ///
 /// The generated function will have these signature:  
-/// `#[ormx(get_one)]`: `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Self>`  
-/// `#[ormx(get_optional)]`: `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Option<Self>>`  
-/// `#[ormx(get_many)]`: `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Vec<Self>>`  
+/// `#[ormx(get_one)]`:
+/// `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Self>`
 ///
-/// By default, the function will be named `get-by_{field_name)`, though this can be changed by
+/// `#[ormx(get_optional)]`:
+/// `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Option<Self>>`
+///
+/// `#[ormx(get_many)]`:
+/// `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Vec<Self>>`
+///
+/// By default, the function will be named `get_by_{field_name)`, though this can be changed by
 /// supplying a custom name: `#[ormx(get_one = by_id)]`.
 /// By default, the function will take a reference to the type of the annotated field as an argument,
 /// though this can be changed by supplying a custom type: `#[ormx(get_one(&str)]`.
@@ -73,7 +79,7 @@ mod utils;
 /// # Custom types
 /// When using custom types (which implement `sqlx::Type`), the field has to annotated with
 /// `#[ormx(custom_type)]`. This will use a column type override for querying this field
-/// (see [the sqlx docs on this](https://docs.rs/sqlx/0.4.0-beta.1/sqlx/macro.query_as.html#column-type-override-infer-from-struct-field).
+/// (see [the sqlx docs on this](https://docs.rs/sqlx/0.4.0-beta.1/sqlx/macro.query_as.html#column-type-override-infer-from-struct-field)).
 ///
 #[proc_macro_derive(Table, attributes(ormx))]
 pub fn derive_table(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

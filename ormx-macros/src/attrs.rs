@@ -13,7 +13,7 @@ pub enum TableAttr {
 
 pub struct Insertable {
     pub attrs: Vec<Attribute>,
-    pub ident: Ident
+    pub ident: Ident,
 }
 
 pub enum TableFieldAttr {
@@ -74,7 +74,7 @@ impl Parse for Insertable {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self {
             attrs: input.call(Attribute::parse_outer)?,
-            ident: input.parse()?
+            ident: input.parse()?,
         })
     }
 }
@@ -101,6 +101,7 @@ macro_rules! impl_parse {
             fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
                 let ident = input.parse::<syn::Ident>()?;
                 match &*ident.to_string() {
+                    #[allow(clippy::redundant_closure_call)]
                     $( $s => (impl_parse!($($t)*))(input).map(Self::$v), )*
                     _ => Err(input.error("unknown attribute"))
                 }
@@ -112,6 +113,7 @@ macro_rules! impl_parse {
     ((= $t:tt)?) => {
         |i: ParseStream| if i.peek(syn::Token![=]) {
             i.parse::<syn::Token![=]>()?;
+            #[allow(clippy::redundant_closure_call)]
             (impl_parse!($t))(i).map(Some)
         } else {
             Ok(None)
@@ -120,6 +122,7 @@ macro_rules! impl_parse {
     // parse "= {value}"
     (= $x:tt) => ( |i: ParseStream| {
         i.parse::<syn::Token![=]>()?;
+        #[allow(clippy::redundant_closure_call)]
         (impl_parse!($x))(i)
     } );
     (String) => ( |i: ParseStream| i.parse().map(|s: syn::LitStr| s.value()) );

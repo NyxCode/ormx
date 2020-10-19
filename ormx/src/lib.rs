@@ -39,7 +39,12 @@ pub use ormx_macros::*;
 #[doc(hidden)]
 pub mod exports {
     pub use futures;
+    pub use crate::query2::*;
 }
+
+#[cfg(feature = "mysql")]
+// TODO: make sure this works with other DBs (with PG, we'll need to use $1, $2, .. instead of ?)
+mod query2;
 
 #[cfg(feature = "mysql")]
 pub type Db = sqlx::MySql;
@@ -62,7 +67,7 @@ where
     /// Insert a row into the database.
     fn insert(
         db: &mut <Db as Database>::Connection,
-        row: impl Insert<Table=Self>,
+        row: impl Insert<Table = Self>,
     ) -> BoxFuture<Result<Self>> {
         row.insert(db)
     }

@@ -57,7 +57,7 @@ impl TableField {
     pub fn fmt_for_select(&self) -> String {
         if self.custom_type {
             format!("{} AS `{}: _`", self.column, self.field)
-        } else if self.column == self.field.to_string() {
+        } else if self.field == self.column {
             self.column.clone()
         } else {
             format!("{} AS {}", self.column, self.field)

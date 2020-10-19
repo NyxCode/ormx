@@ -5,6 +5,8 @@ use sqlx::MySqlPool;
 // To run this example, first run `mariadb.sh` to start mariadb in a docker container.
 // Then, just run `cargo run`.
 
+mod query2;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
@@ -44,13 +46,17 @@ async fn main() -> anyhow::Result<()> {
     log::info!("reload the user, in case it has been modified");
     new.reload(&db).await?;
 
+    log::info!("use the improved query macro for searching users");
+    let search_result = query2::query_users(&db, Some("NewFirstName"), None).await?;
+    println!("{:?}", search_result);
+
     log::info!("delete the user from the database");
     new.delete(&db).await?;
 
     Ok(())
 }
 
-#[derive(ormx::Table)]
+#[derive(Debug, ormx::Table)]
 #[ormx(table = "users", id = user_id, insertable)]
 struct User {
     // map this field to the column "id"
