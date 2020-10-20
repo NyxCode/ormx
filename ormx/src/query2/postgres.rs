@@ -1,3 +1,4 @@
+#[doc(hidden)]
 #[macro_export]
 macro_rules! __conditional_query_as_impl {
     ( $($t:tt)* ) => {

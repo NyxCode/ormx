@@ -1,5 +1,25 @@
 {
   "db": "MySQL",
+  "04163ade1f1e876947699bfd249d8bdb2c07a25e22a9dacd1a386c9ba1643763": {
+    "query": "SELECT last_login FROM users WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "last_login",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        true
+      ]
+    }
+  },
   "04912efa922c870efb5268ef2a98a82dfa657b084a50c91b89031388c514de65": {
     "query": "SELECT LAST_INSERT_ID() as id",
     "describe": {
@@ -102,6 +122,94 @@
       ]
     }
   },
+  "1a9cf109a4db503d9b9cc88eecb0118b830812bb36a2a54160a7133b1d4bbb89": {
+    "query": "SELECT id AS user_id, first_name, last_name, email, last_login FROM users ORDER BY first_name DESC LIMIT $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_login",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    }
+  },
+  "1ecfc95acb98ebcc14f6252ff4f6cd93996a4964f5bd32ea1f12be2de39f206d": {
+    "query": "SELECT id AS user_id, first_name, last_name, email, last_login FROM users WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_login",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    }
+  },
   "34c50587207ca756ddfbe271d7d6a672ac47706a81a5964c6d9f1806097dc478": {
     "query": "SELECT id AS user_id, first_name, last_name, email, last_login FROM users WHERE email = ?",
     "describe": {
@@ -179,6 +287,18 @@
       ]
     }
   },
+  "50293c2e54af11d4c2a553e29b671cef087a159c6ee7182d8ca929ecb748f3b7": {
+    "query": "DELETE FROM users WHERE id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "6fb64bec8059ce5b8499fbd88eefb3b8acc60fc756fd9e4aca644161a8d94a44": {
     "query": "UPDATE users SET first_name = ?, last_name = ?, email = ?, last_login = ? WHERE id = ?",
     "describe": {
@@ -206,66 +326,75 @@
         {
           "ordinal": 0,
           "name": "user_id",
-          "type_info": {
-            "type": "Long",
-            "flags": {
-              "bits": 547
-            },
-            "char_set": 63,
-            "max_size": 10
-          }
+          "type_info": "Int4"
         },
         {
           "ordinal": 1,
           "name": "first_name",
-          "type_info": {
-            "type": "VarString",
-            "flags": {
-              "bits": 4097
-            },
-            "char_set": 224,
-            "max_size": 512
-          }
+          "type_info": "Varchar"
         },
         {
           "ordinal": 2,
           "name": "last_name",
-          "type_info": {
-            "type": "VarString",
-            "flags": {
-              "bits": 4097
-            },
-            "char_set": 224,
-            "max_size": 512
-          }
+          "type_info": "Varchar"
         },
         {
           "ordinal": 3,
           "name": "email",
-          "type_info": {
-            "type": "VarString",
-            "flags": {
-              "bits": 4101
-            },
-            "char_set": 224,
-            "max_size": 512
-          }
+          "type_info": "Varchar"
         },
         {
           "ordinal": 4,
           "name": "last_login",
-          "type_info": {
-            "type": "Datetime",
-            "flags": {
-              "bits": 128
-            },
-            "char_set": 63,
-            "max_size": 19
-          }
+          "type_info": "Timestamp"
         }
       ],
       "parameters": {
-        "Right": 0
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    }
+  },
+  "80f2d1eccac250db9df5623d3df22c09f8b4839354c6e2dcd678ae08f2a84b2a": {
+    "query": "SELECT id AS user_id, first_name, last_name, email, last_login FROM users WHERE email = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_login",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
       },
       "nullable": [
         false,
@@ -308,66 +437,31 @@
         {
           "ordinal": 0,
           "name": "user_id",
-          "type_info": {
-            "type": "Long",
-            "flags": {
-              "bits": 547
-            },
-            "char_set": 63,
-            "max_size": 10
-          }
+          "type_info": "Int4"
         },
         {
           "ordinal": 1,
           "name": "first_name",
-          "type_info": {
-            "type": "VarString",
-            "flags": {
-              "bits": 4097
-            },
-            "char_set": 224,
-            "max_size": 512
-          }
+          "type_info": "Varchar"
         },
         {
           "ordinal": 2,
           "name": "last_name",
-          "type_info": {
-            "type": "VarString",
-            "flags": {
-              "bits": 4097
-            },
-            "char_set": 224,
-            "max_size": 512
-          }
+          "type_info": "Varchar"
         },
         {
           "ordinal": 3,
           "name": "email",
-          "type_info": {
-            "type": "VarString",
-            "flags": {
-              "bits": 4101
-            },
-            "char_set": 224,
-            "max_size": 512
-          }
+          "type_info": "Varchar"
         },
         {
           "ordinal": 4,
           "name": "last_login",
-          "type_info": {
-            "type": "Datetime",
-            "flags": {
-              "bits": 128
-            },
-            "char_set": 63,
-            "max_size": 19
-          }
+          "type_info": "Timestamp"
         }
       ],
       "parameters": {
-        "Right": 0
+        "Left": []
       },
       "nullable": [
         false,
@@ -453,6 +547,77 @@
         false,
         true
       ]
+    }
+  },
+  "914241d7eb551189388f45ca6cc9748d12d43428b5c3ecd7ec2465e1669c54f6": {
+    "query": "SELECT id AS user_id, first_name, last_name, email, last_login FROM users WHERE first_name LIKE $1 ORDER BY first_name DESC",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_login",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    }
+  },
+  "98a1b2701d5b4854337b6aa380121750bf0584784fa5d35f1b361964809bf899": {
+    "query": "UPDATE users SET last_login = $1 WHERE id = $2",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Timestamp",
+          "Int4"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "adbef61a3289962f131d2d51a5ce7fbe149534a5f6dbb29b86472f35f1505c92": {
+    "query": "UPDATE users SET first_name = $1, last_name = $2 WHERE id = $3",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Int4"
+        ]
+      },
+      "nullable": []
     }
   },
   "ae31b408a4e79956063d1dc11377c10c963b4bef1990e5b003f4691bf29c0e7d": {
@@ -542,6 +707,28 @@
       "nullable": []
     }
   },
+  "c30465ab874190620b3b24e0c4c759460d732c7b7773125de1f9b260f4aedaa1": {
+    "query": "INSERT INTO users (first_name, last_name, email) VALUES ($1, $2, $3) RETURNING id AS user_id",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "c71e6fc6ddecbb62161337a239d130438fcae1da6ec7a2d4b180a8086ce4fd64": {
     "query": "UPDATE users SET last_login = ? WHERE id = ?",
     "describe": {
@@ -560,6 +747,67 @@
         "Right": 3
       },
       "nullable": []
+    }
+  },
+  "c8987d8fc895f70c5da7af32c0beb6732fb412cd525e6fefff77c0cc35ef77dd": {
+    "query": "UPDATE users SET first_name = $1, last_name = $2, email = $3, last_login = $4 WHERE id = $5",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Timestamp",
+          "Int4"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "cd7a0a970bce070441a7be8fdccebf9963fec220b0300bc80d20b5c109d3dd98": {
+    "query": "SELECT id AS user_id, first_name, last_name, email, last_login FROM users WHERE first_name LIKE $1 ORDER BY first_name DESC LIMIT $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_login",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
     }
   },
   "f2910f0ebc530281c2e4a6b8e21d611511a28fc60a17af2483f7d73d02e1534a": {

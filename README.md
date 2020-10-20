@@ -8,7 +8,7 @@ Add ormx and sqlx to your `Cargo.toml`
 ```toml
 [dependencies.ormx]
 default-features = false
-version = "0.0.1-alpha.7"
+version = "0.1.0"
 features = ["mysql"]
 
 [dependencies.sqlx]

@@ -5,7 +5,7 @@ authors = ["moritz"]
 edition = "2018"
 
 [dependencies]
-ormx = { path = "../ormx", default-features = false, features = ["mysql"] }
+ormx = { path = "../ormx", features = ["mysql"] }
 tokio = { version = "0.2", features = ["full"] }
 anyhow = "1"
 dotenv = "0.15"

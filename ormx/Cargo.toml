@@ -7,11 +7,16 @@ license = "MIT"
 description = "lightweight procedural macros bringing orm-like features to sqlx"
 homepage = "https://github.com/NyxCode/ormx"
 
+[package.metadata.docs.rs]
+features = ["_docs-rs-build"]
+targets = ["x86_64-unknown-linux-gnu"]
+
 [features]
-default = ["sqlx/runtime-tokio", "mysql"]
 mysql = ["sqlx/mysql", "ormx-macros/mysql"]
 sqlite = ["sqlx/sqlite", "ormx-macros/sqlite"]
 postgres = ["sqlx/postgres", "ormx-macros/postgres"]
+
+_docs-rs-build = ["sqlx/runtime-tokio", "mysql"]
 
 [dependencies]
 ormx-macros = { path = "../ormx-macros", version = "0.1.0" }
