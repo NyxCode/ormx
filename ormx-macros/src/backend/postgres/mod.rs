@@ -5,10 +5,10 @@ use crate::table::Table;
 use proc_macro2::TokenStream;
 use std::borrow::Cow;
 
-pub struct MySqlBackend;
+pub struct PgBackend;
 
-impl Backend for MySqlBackend {
-    type Bindings = MySqlBindings;
+impl Backend for PgBackend {
+    type Bindings = PgBindings;
 
     fn impl_insert(table: &Table) -> TokenStream {
         insert::impl_insert(table)
@@ -16,12 +16,13 @@ impl Backend for MySqlBackend {
 }
 
 #[derive(Default)]
-pub struct MySqlBindings;
+pub struct PgBindings(usize);
 
-impl Iterator for MySqlBindings {
+impl Iterator for PgBindings {
     type Item = Cow<'static, str>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(Cow::Borrowed("?"))
+        self.0 += 1;
+        Some(Cow::Owned(format!("${}", self.0)))
     }
 }

@@ -98,10 +98,10 @@ macro_rules! impl_parse {
         $( $s:literal => $v:ident( $($t:tt)* ) ),*
     }) => {
         impl syn::parse::Parse for $i {
+            #[allow(clippy::redundant_closure_call)]
             fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
                 let ident = input.parse::<syn::Ident>()?;
                 match &*ident.to_string() {
-                    #[allow(clippy::redundant_closure_call)]
                     $( $s => (impl_parse!($($t)*))(input).map(Self::$v), )*
                     _ => Err(input.error("unknown attribute"))
                 }

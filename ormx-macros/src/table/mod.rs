@@ -82,11 +82,11 @@ impl Getter {
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let parsed = Table::try_from(&input)?;
 
-    let impl_table = Implementation::implement_table(&parsed);
+    let impl_table = Implementation::impl_table(&parsed);
     let insert_struct = Implementation::insert_struct(&parsed);
-    let impl_insert = Implementation::implement_insert(&parsed);
-    let getters = Implementation::getters(&parsed);
-    let setters = Implementation::setters(&parsed);
+    let impl_insert = Implementation::impl_insert(&parsed);
+    let getters = Implementation::impl_getters(&parsed);
+    let setters = Implementation::impl_setters(&parsed);
 
     Ok(quote! {
         #impl_table

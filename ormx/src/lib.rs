@@ -42,8 +42,7 @@ pub mod exports {
     pub use futures;
 }
 
-#[cfg(feature = "mysql")]
-// TODO: make sure this works with other DBs (with PG, we'll need to use $1, $2, .. instead of ?)
+#[cfg(any(feature = "mysql", feature = "postgres"))]
 mod query2;
 
 #[cfg(feature = "mysql")]

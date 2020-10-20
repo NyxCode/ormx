@@ -1,8 +1,35 @@
+use crate::backend::postgres::PgBindings;
 use crate::table::{Table, TableField};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Ident;
+
+fn insert_sql(table: &Table, insert_fields: &[&TableField]) -> String {
+    format!(
+        "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
+        table.table,
+        insert_fields
+            .iter()
+            .map(|field| &field.column)
+            .join(", "),
+        PgBindings::default().take(insert_fields.len()).join(", "),
+        table.id.fmt_for_select()
+    )
+}
+
+fn query_default_sql(table: &Table, default_fields: &[&TableField]) -> String {
+    format!(
+        "SELECT {} FROM {} WHERE {} = {}",
+        default_fields
+            .iter()
+            .map(|field| field.fmt_for_select())
+            .join(", "),
+        table.table,
+        table.id.column,
+        PgBindings::default().next().unwrap()
+    )
+}
 
 pub fn impl_insert(table: &Table) -> TokenStream {
     let insert_ident = match &table.insertable {
@@ -15,7 +42,6 @@ pub fn impl_insert(table: &Table) -> TokenStream {
 
     let id_ident = &table.id.field;
     let table_ident = &table.ident;
-    let box_future = quote!(ormx::exports::futures::future::BoxFuture);
     let insert_field_idents = insert_fields
         .iter()
         .map(|field| &field.field)
@@ -24,21 +50,10 @@ pub fn impl_insert(table: &Table) -> TokenStream {
         .iter()
         .map(|field| &field.field)
         .collect::<Vec<&Ident>>();
-    let insert_sql = format!(
-        "INSERT INTO {} ({}) VALUES ({})",
-        table.table,
-        insert_fields.iter().map(|field| &field.column).join(", "),
-        std::iter::repeat("?").take(insert_fields.len()).join(", ")
-    );
-    let query_default_sql = format!(
-        "SELECT {} FROM {} WHERE {} = ?",
-        default_fields
-            .iter()
-            .map(|field| field.fmt_for_select())
-            .join(", "),
-        table.table,
-        table.id.column
-    );
+
+    let insert_sql = insert_sql(table, &insert_fields);
+
+    let query_default_sql = query_default_sql(table, &default_fields);
     let query_default = if default_fields.is_empty() {
         quote!()
     } else {
@@ -49,22 +64,20 @@ pub fn impl_insert(table: &Table) -> TokenStream {
         }
     };
 
+    let box_future = crate::utils::box_future();
     quote! {
         impl ormx::Insert for #insert_ident {
             type Table = #table_ident;
 
             fn insert(
                 self,
-                db: &mut sqlx::MySqlConnection,
+                db: &mut sqlx::PgConnection,
             ) -> #box_future<sqlx::Result<Self::Table>> {
                 Box::pin(async move {
-                    sqlx::query!(#insert_sql, #( self.#insert_field_idents, )*)
-                        .execute(db as &mut sqlx::MySqlConnection)
-                        .await?;
-                    let _id = sqlx::query!("SELECT LAST_INSERT_ID() as id")
-                        .fetch_one(db as &mut sqlx::MySqlConnection)
+                    let _id = sqlx::query!(#insert_sql, #( self.#insert_field_idents, )*)
+                        .fetch_one(db as &mut sqlx::PgConnection)
                         .await?
-                        .id;
+                        .#id_ident;
 
                     #query_default
 

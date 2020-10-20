@@ -21,5 +21,5 @@ pub struct PatchField {
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let parsed = Patch::try_from(&input)?;
-    Ok(Implementation::implement_patch(&parsed))
+    Ok(Implementation::impl_patch(&parsed))
 }

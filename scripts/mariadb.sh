@@ -2,7 +2,7 @@ CONTAINER_ID=$(
   docker run -it --rm --name ormx-test-mysql-db \
     -e MYSQL_DATABASE=ormx \
     -e MYSQL_ROOT_PASSWORD=admin \
-    -v $(pwd)/schema.sql:/docker-entrypoint-initdb.d/schema.sql \
+    -v $(pwd)/scripts/mysql-schema.sql:/docker-entrypoint-initdb.d/schema.sql \
     -d mariadb
 )
 CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $CONTAINER_ID)

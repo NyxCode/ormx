@@ -2,8 +2,8 @@ use chrono::{NaiveDateTime, Utc};
 use ormx::{Insert, Table};
 use sqlx::MySqlPool;
 
-// To run this example, first run `mariadb.sh` to start mariadb in a docker container.
-// Then, just run `cargo run`.
+// To run this example, first run `/scripts/postgres.sh` to start postgres in a docker container and
+// write the database URL to `.env`. Then, source `.env` (`. .env`) and run `cargo run`
 
 mod query2;
 

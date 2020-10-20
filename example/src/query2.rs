@@ -1,10 +1,10 @@
 use crate::User;
-use sqlx::MySqlPool;
+use sqlx::{ MySqlPool};
 
 pub(crate) async fn query_users(
     db: &MySqlPool,
     filter: Option<&str>,
-    limit: Option<u32>,
+    limit: Option<usize>,
 ) -> anyhow::Result<Vec<User>> {
     let result = ormx::conditional_query_as!(
         User,
@@ -14,7 +14,7 @@ pub(crate) async fn query_users(
         }
         "ORDER BY first_name DESC"
         Some(l) = limit => {
-            "LIMIT" ?(l)
+            "LIMIT" ?(l as i64)
         }
     )
     .fetch_all(db)
