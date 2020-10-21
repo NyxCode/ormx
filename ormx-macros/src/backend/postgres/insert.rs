@@ -1,4 +1,4 @@
-use crate::backend::postgres::{PgBindings, PgBackend};
+use crate::backend::postgres::{PgBackend, PgBindings};
 use crate::table::{Table, TableField};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -61,6 +61,18 @@ pub fn impl_insert(table: &Table) -> TokenStream {
         }
     };
 
+    let insert_field_exprs = insert_fields
+        .iter()
+        .map(|field| {
+            let ident = &field.field;
+            let ty = &field.ty;
+            match field.custom_type {
+                true => quote!(&self.#ident as &#ty),
+                false => quote!(&self.#ident),
+            }
+        })
+        .collect::<Vec<TokenStream>>();
+
     let box_future = crate::utils::box_future();
     quote! {
         impl ormx::Insert for #insert_ident {
@@ -71,7 +83,7 @@ pub fn impl_insert(table: &Table) -> TokenStream {
                 db: &mut sqlx::PgConnection,
             ) -> #box_future<sqlx::Result<Self::Table>> {
                 Box::pin(async move {
-                    let _id = sqlx::query!(#insert_sql, #( self.#insert_field_idents, )*)
+                    let _id = sqlx::query!(#insert_sql, #( #insert_field_exprs, )*)
                         .fetch_one(db as &mut sqlx::PgConnection)
                         .await?
                         .#id_ident;

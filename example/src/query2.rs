@@ -1,14 +1,15 @@
 use crate::User;
-use sqlx::{ MySqlPool};
+use sqlx::PgPool;
 
 pub(crate) async fn query_users(
-    db: &MySqlPool,
+    db: &PgPool,
     filter: Option<&str>,
     limit: Option<usize>,
 ) -> anyhow::Result<Vec<User>> {
     let result = ormx::conditional_query_as!(
         User,
-        "SELECT id AS user_id, first_name, last_name, email, last_login FROM users"
+        r#"SELECT id AS user_id, first_name, last_name, email, role AS "role: _", last_login"#
+        "FROM users"
         Some(f) = filter => {
             "WHERE first_name LIKE" ?(f)
         }

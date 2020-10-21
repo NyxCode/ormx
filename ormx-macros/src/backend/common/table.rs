@@ -56,9 +56,6 @@ fn get<B: Backend>(table: &Table, column_list: &str) -> TokenStream {
 
 fn update<B: Backend>(table: &Table) -> TokenStream {
     let box_future = crate::utils::box_future();
-    let id_ident = &table.id.field;
-    let idents_except_id = table.fields_except_id().map(|field| &field.field);
-
     let mut bindings = B::Bindings::default();
     let mut assignments = vec![];
     for field in table.fields_except_id() {
@@ -75,13 +72,28 @@ fn update<B: Backend>(table: &Table) -> TokenStream {
         bindings.next().unwrap()
     );
 
+    let id_argument = &table.id.field;
+    let other_arguments = table
+        .fields_except_id()
+        .map(|field| match field.custom_type {
+            false => {
+                let ident = &field.field;
+                quote!(self.#ident)
+            },
+            true => {
+                let ident = &field.field;
+                let ty = &field.ty;
+                quote!(self.#ident as #ty)
+            }
+        });
+
     quote! {
         fn update<'a, 'c: 'a>(
             &'a self,
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
         ) -> #box_future<'a, sqlx::Result<()>> {
             Box::pin(async move {
-                sqlx::query!(#update_sql, #( self.#idents_except_id, )* self.#id_ident)
+                sqlx::query!(#update_sql, #( #other_arguments, )* self.#id_argument)
                     .execute(db)
                     .await?;
                 Ok(())

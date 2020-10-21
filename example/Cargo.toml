@@ -5,7 +5,7 @@ authors = ["moritz"]
 edition = "2018"
 
 [dependencies]
-ormx = { path = "../ormx", features = ["mysql"] }
+ormx = { path = "../ormx", features = ["postgres"] }
 tokio = { version = "0.2", features = ["full"] }
 anyhow = "1"
 dotenv = "0.15"
@@ -16,4 +16,4 @@ log = "0.4"
 [dependencies.sqlx]
 version = "0.4.0-beta.1"
 default-features = false
-features = ["macros", "mysql", "runtime-tokio", "chrono", "offline"]
+features = ["macros", "postgres", "runtime-tokio", "chrono", "offline"]

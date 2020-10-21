@@ -1,6 +1,6 @@
 use chrono::{NaiveDateTime, Utc};
 use ormx::{Insert, Table};
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
 // To run this example, first run `/scripts/postgres.sh` to start postgres in a docker container and
 // write the database URL to `.env`. Then, source `.env` (`. .env`) and run `cargo run`
@@ -14,13 +14,14 @@ async fn main() -> anyhow::Result<()> {
         .with_level(log::LevelFilter::Info)
         .init()?;
 
-    let db = MySqlPool::connect(&dotenv::var("DATABASE_URL")?).await?;
+    let db = PgPool::connect(&dotenv::var("DATABASE_URL")?).await?;
 
     log::info!("insert a new row into the database");
     let mut new = InsertUser {
         first_name: "Moritz".to_owned(),
         last_name: "Bischof".to_owned(),
         email: "moritz.bischof1@gmail.com".to_owned(),
+        role: Role::User
     }
     .insert(&mut *db.acquire().await?)
     .await?;
@@ -62,12 +63,14 @@ struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]
     #[ormx(get_one = get_by_user_id)]
-    user_id: u32,
+    user_id: i32,
     first_name: String,
     last_name: String,
     // generate `User::by_email(&str) -> Result<Option<Self>>`
     #[ormx(get_optional(&str))]
     email: String,
+    #[ormx(custom_type)]
+    role: Role,
     // don't include this field into `InsertUser` since it has a default value
     // generate `User::set_last_login(Option<NaiveDateTime>) -> Result<()>`
     #[ormx(default, set)]
@@ -80,4 +83,10 @@ struct User {
 struct UpdateName {
     first_name: String,
     last_name: String,
+}
+
+#[derive(Debug, Copy, Clone, sqlx::Type)]
+enum Role {
+    User,
+    Admin,
 }

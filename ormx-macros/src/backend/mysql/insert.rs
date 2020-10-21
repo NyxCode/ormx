@@ -62,7 +62,7 @@ pub fn impl_insert(table: &Table) -> TokenStream {
                     sqlx::query!(#insert_sql, #( self.#insert_field_idents, )*)
                         .execute(db as &mut sqlx::MySqlConnection)
                         .await?;
-                    let _id = sqlx::query!("SELECT LAST_INSERT_ID() as id")
+                    let _id = sqlx::query!("SELECT LAST_INSERT_ID() AS id")
                         .fetch_one(db as &mut sqlx::MySqlConnection)
                         .await?
                         .id;
