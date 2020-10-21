@@ -19,7 +19,7 @@ postgres = ["sqlx/postgres", "ormx-macros/postgres"]
 _docs-rs-build = ["sqlx/runtime-tokio", "mysql"]
 
 [dependencies]
-ormx-macros = { path = "../ormx-macros", version = "0.1.0" }
+ormx-macros = { path = "../ormx-macros", version = "0.1.2" }
 futures = "0.3"
 
 [dependencies.sqlx]
