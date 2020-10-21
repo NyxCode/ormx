@@ -1,6 +1,6 @@
 [package]
 name = "ormx"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Moritz Bischof"]
 edition = "2018"
 license = "MIT"
