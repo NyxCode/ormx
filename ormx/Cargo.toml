@@ -16,10 +16,10 @@ mysql = ["sqlx/mysql", "ormx-macros/mysql"]
 sqlite = ["sqlx/sqlite", "ormx-macros/sqlite"]
 postgres = ["sqlx/postgres", "ormx-macros/postgres"]
 
-_docs-rs-build = ["sqlx/runtime-tokio", "mysql"]
+_docs-rs-build = ["sqlx/runtime-tokio", "postgres"]
 
 [dependencies]
-ormx-macros = { path = "../ormx-macros", version = "0.1.2" }
+ormx-macros = { path = "../ormx-macros", version = "0.1.3" }
 futures = "0.3"
 
 [dependencies.sqlx]

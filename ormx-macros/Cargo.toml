@@ -1,6 +1,6 @@
 [package]
 name = "ormx-macros"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["moritz"]
 edition = "2018"
 description = "lightweight procedural macros bringing orm-like features to sqlx"

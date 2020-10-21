@@ -1,4 +1,4 @@
-use crate::backend::postgres::PgBindings;
+use crate::backend::postgres::{PgBindings, PgBackend};
 use crate::table::{Table, TableField};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -11,7 +11,7 @@ fn insert_sql(table: &Table, insert_fields: &[&TableField]) -> String {
         table.table,
         insert_fields.iter().map(|field| &field.column).join(", "),
         PgBindings::default().take(insert_fields.len()).join(", "),
-        table.id.fmt_for_select()
+        table.id.fmt_for_select::<PgBackend>()
     )
 }
 
@@ -20,7 +20,7 @@ fn query_default_sql(table: &Table, default_fields: &[&TableField]) -> String {
         "SELECT {} FROM {} WHERE {} = {}",
         default_fields
             .iter()
-            .map(|field| field.fmt_for_select())
+            .map(|field| field.fmt_for_select::<PgBackend>())
             .join(", "),
         table.table,
         table.id.column,
