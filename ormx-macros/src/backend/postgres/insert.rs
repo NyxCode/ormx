@@ -9,10 +9,7 @@ fn insert_sql(table: &Table, insert_fields: &[&TableField]) -> String {
     format!(
         "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
         table.table,
-        insert_fields
-            .iter()
-            .map(|field| &field.column)
-            .join(", "),
+        insert_fields.iter().map(|field| &field.column).join(", "),
         PgBindings::default().take(insert_fields.len()).join(", "),
         table.id.fmt_for_select()
     )

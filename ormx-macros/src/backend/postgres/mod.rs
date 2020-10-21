@@ -8,6 +8,7 @@ use std::borrow::Cow;
 pub struct PgBackend;
 
 impl Backend for PgBackend {
+    const QUOTE: char = '"';
     type Bindings = PgBindings;
 
     fn impl_insert(table: &Table) -> TokenStream {

@@ -8,6 +8,7 @@ use std::borrow::Cow;
 pub struct MySqlBackend;
 
 impl Backend for MySqlBackend {
+    const QUOTE: char = '`';
     type Bindings = MySqlBindings;
 
     fn impl_insert(table: &Table) -> TokenStream {

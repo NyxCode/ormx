@@ -12,7 +12,7 @@ use quote::quote;
 use syn::{Ident, Type, Visibility};
 
 pub(crate) fn getters<B: Backend>(table: &Table) -> TokenStream {
-    let column_list = table.column_list();
+    let column_list = table.column_list::<B>();
     let vis = &table.vis;
     let mut getters = TokenStream::new();
 
@@ -62,12 +62,7 @@ pub fn get_one(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> Toke
     }
 }
 
-pub fn get_optional(
-    vis: &Visibility,
-    ident: &Ident,
-    by_ty: &Type,
-    sql: &str,
-) -> TokenStream {
+pub fn get_optional(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
     quote! {
         #vis async fn #ident(
             db: impl sqlx::Executor<'_, Database = ormx::Db>,

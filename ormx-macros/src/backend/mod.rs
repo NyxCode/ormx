@@ -17,6 +17,7 @@ pub type Implementation = postgres::PgBackend;
 compile_error!("sqlite is currently not supported");
 
 pub trait Backend: Sized {
+    const QUOTE: char;
     type Bindings: Iterator<Item = Cow<'static, str>> + Default;
 
     /// Generate an `impl <Table>` block, containing getter methods

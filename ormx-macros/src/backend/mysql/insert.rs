@@ -1,3 +1,4 @@
+use super::MySqlBackend;
 use crate::table::{Table, TableField};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -34,7 +35,7 @@ pub fn impl_insert(table: &Table) -> TokenStream {
         "SELECT {} FROM {} WHERE {} = ?",
         default_fields
             .iter()
-            .map(|field| field.fmt_for_select())
+            .map(|field| field.fmt_for_select::<MySqlBackend>())
             .join(", "),
         table.table,
         table.id.column

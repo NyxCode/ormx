@@ -7,7 +7,7 @@ pub fn impl_table<B: Backend>(table: &Table) -> TokenStream {
     let table_ident = &table.ident;
     let id_ident = &table.id.field;
     let id_ty = &table.id.ty;
-    let column_list = table.column_list();
+    let column_list = table.column_list::<B>();
 
     let get = get::<B>(table, &column_list);
     let stream_all = stream_all(table, &column_list);

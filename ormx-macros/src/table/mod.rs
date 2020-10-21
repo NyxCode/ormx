@@ -45,18 +45,24 @@ impl Table {
         self.fields.iter().filter(|field| field.default)
     }
 
-    pub fn column_list(&self) -> String {
+    pub fn column_list<B: Backend>(&self) -> String {
         self.fields
             .iter()
-            .map(|field| field.fmt_for_select())
+            .map(|field| field.fmt_for_select::<B>())
             .join(", ")
     }
 }
 
 impl TableField {
-    pub fn fmt_for_select(&self) -> String {
+    pub fn fmt_for_select<B: Backend>(&self) -> String {
         if self.custom_type {
-            format!("{} AS `{}: _`", self.column, self.field)
+            format!(
+                "{} AS {}{}: _{}",
+                self.column,
+                B::QUOTE,
+                self.field,
+                B::QUOTE
+            )
         } else if self.field == self.column {
             self.column.clone()
         } else {
