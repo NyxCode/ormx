@@ -82,15 +82,30 @@ where
         db: impl Executor<'c, Database = Db> + 'a,
     ) -> BoxStream<'a, Result<Self>>;
 
+    fn stream_all_paginated<'a, 'c: 'a>(
+        db: impl Executor<'c, Database = Db> + 'a,
+        offset: i64,
+        limit: i64,
+    ) -> BoxStream<'a, Result<Self>>;
+
     /// Load all rows from this table.
     fn all<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
     ) -> BoxFuture<'a, Result<Vec<Self>>> {
         use futures::TryStreamExt;
 
-        Box::pin(async move { Self::stream_all(db).try_collect().await })
+        Box::pin(Self::stream_all(db).try_collect())
     }
 
+    fn all_paginated<'a, 'c: 'a>(
+        db: impl Executor<'c, Database = Db> + 'a,
+        offset: i64,
+        limit: i64,
+    ) -> BoxFuture<'a, Result<Vec<Self>>> {
+        use futures::TryStreamExt;
+
+        Box::pin(Self::stream_all_paginated(db, offset, limit).try_collect())
+    }
     /// Applies a patch to this row.
     fn patch<'a, 'c: 'a, P>(
         &'a mut self,

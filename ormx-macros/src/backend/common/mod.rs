@@ -49,7 +49,7 @@ pub(crate) fn getters<B: Backend>(table: &Table) -> TokenStream {
     }
 }
 
-pub(crate) fn get_one(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
+pub fn get_one(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
     quote! {
         #vis async fn #ident(
             db: impl sqlx::Executor<'_, Database = ormx::Db>,
@@ -62,7 +62,7 @@ pub(crate) fn get_one(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) 
     }
 }
 
-pub(crate) fn get_optional(
+pub fn get_optional(
     vis: &Visibility,
     ident: &Ident,
     by_ty: &Type,
@@ -80,7 +80,7 @@ pub(crate) fn get_optional(
     }
 }
 
-pub(crate) fn get_many(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
+pub fn get_many(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
     quote! {
         #vis async fn #ident(
             db: impl sqlx::Executor<'_, Database = ormx::Db>,

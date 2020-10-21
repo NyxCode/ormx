@@ -11,6 +11,7 @@ pub fn impl_table<B: Backend>(table: &Table) -> TokenStream {
 
     let get = get::<B>(table, &column_list);
     let stream_all = stream_all(table, &column_list);
+    let stream_all_paginated = stream_all_paginated::<B>(table, &column_list);
     let update = update::<B>(table);
     let delete = delete::<B>(table);
 
@@ -22,6 +23,7 @@ pub fn impl_table<B: Backend>(table: &Table) -> TokenStream {
 
             #get
             #stream_all
+            #stream_all_paginated
             #update
             #delete
         }
@@ -97,6 +99,29 @@ fn stream_all(table: &Table, column_list: &str) -> TokenStream {
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
         ) -> #box_stream<'a, sqlx::Result<Self>> {
             sqlx::query_as!(Self, #all_sql)
+                .fetch(db)
+        }
+    }
+}
+
+fn stream_all_paginated<B: Backend>(table: &Table, column_list: &str) -> TokenStream {
+    let box_stream = crate::utils::box_stream();
+    let mut bindings = B::Bindings::default();
+    let all_sql = format!(
+        "SELECT {} FROM {} LIMIT {} OFFSET {}",
+        column_list,
+        table.table,
+        bindings.next().unwrap(),
+        bindings.next().unwrap()
+    );
+
+    quote! {
+        fn stream_all_paginated<'a, 'c: 'a>(
+            db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
+            offset: i64,
+            limit: i64,
+        ) -> #box_stream<'a, sqlx::Result<Self>> {
+            sqlx::query_as!(Self, #all_sql, limit, offset)
                 .fetch(db)
         }
     }
