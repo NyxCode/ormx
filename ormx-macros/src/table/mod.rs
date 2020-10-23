@@ -1,11 +1,12 @@
-use crate::attrs::{Getter, Insertable};
-use crate::backend::{Backend, Implementation};
+use std::convert::TryFrom;
+
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-
-use std::convert::TryFrom;
 use syn::{DeriveInput, Result, Type, Visibility};
+
+use crate::attrs::{Getter, Insertable};
+use crate::backend::{Backend, Implementation};
 
 mod parse;
 

@@ -1,7 +1,9 @@
-use crate::backend::{Backend, Implementation};
-use proc_macro2::TokenStream;
 use std::convert::TryFrom;
+
+use proc_macro2::TokenStream;
 use syn::{DeriveInput, Ident, Path, Result, Type};
+
+use crate::backend::{Backend, Implementation};
 
 mod parse;
 

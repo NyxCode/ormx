@@ -1,9 +1,12 @@
-use super::{Table, TableField};
+use std::convert::TryFrom;
+
+use proc_macro2::Span;
+use syn::{Data, DeriveInput, Error, Ident, Result};
+
 use crate::attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr};
 use crate::utils::{missing_attr, set_once};
-use proc_macro2::Span;
-use std::convert::TryFrom;
-use syn::{Data, DeriveInput, Error, Ident, Result};
+
+use super::{Table, TableField};
 
 macro_rules! none {
     ($($i:ident),*) => { $( let mut $i = None; )* };

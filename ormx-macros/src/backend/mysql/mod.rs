@@ -1,9 +1,11 @@
-mod insert;
+use std::borrow::Cow;
+
+use proc_macro2::TokenStream;
 
 use crate::backend::Backend;
 use crate::table::Table;
-use proc_macro2::TokenStream;
-use std::borrow::Cow;
+
+mod insert;
 
 pub struct MySqlBackend;
 

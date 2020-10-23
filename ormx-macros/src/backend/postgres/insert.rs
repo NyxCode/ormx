@@ -1,9 +1,10 @@
-use crate::backend::postgres::{PgBackend, PgBindings};
-use crate::table::{Table, TableField};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Ident;
+
+use crate::backend::postgres::{PgBackend, PgBindings};
+use crate::table::{Table, TableField};
 
 fn insert_sql(table: &Table, insert_fields: &[&TableField]) -> String {
     format!(
@@ -67,8 +68,8 @@ pub fn impl_insert(table: &Table) -> TokenStream {
             let ident = &field.field;
             let ty = &field.ty;
             match field.custom_type {
-                true => quote!(&self.#ident as &#ty),
-                false => quote!(&self.#ident),
+                true => quote!(self.#ident as #ty),
+                false => quote!(self.#ident),
             }
         })
         .collect::<Vec<TokenStream>>();

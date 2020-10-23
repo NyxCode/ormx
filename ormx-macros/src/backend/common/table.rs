@@ -1,7 +1,9 @@
-use crate::backend::Backend;
-use crate::table::Table;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::export::TokenStreamExt;
+
+use crate::backend::Backend;
+use crate::table::Table;
 
 pub fn impl_table<B: Backend>(table: &Table) -> TokenStream {
     let table_ident = &table.ident;
@@ -71,21 +73,18 @@ fn update<B: Backend>(table: &Table) -> TokenStream {
         table.id.column,
         bindings.next().unwrap()
     );
-
     let id_argument = &table.id.field;
-    let other_arguments = table
-        .fields_except_id()
-        .map(|field| match field.custom_type {
-            false => {
-                let ident = &field.field;
-                quote!(self.#ident)
-            },
-            true => {
-                let ident = &field.field;
-                let ty = &field.ty;
-                quote!(self.#ident as #ty)
-            }
-        });
+    let other_arguments = table.fields_except_id().map(|field| {
+        let ident = &field.field;
+        let mut out = quote!(self.#ident);
+
+        if field.custom_type {
+            let ty = &field.ty;
+            out.append_all(quote!(as #ty))
+        }
+
+        out
+    });
 
     quote! {
         fn update<'a, 'c: 'a>(

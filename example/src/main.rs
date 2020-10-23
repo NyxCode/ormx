@@ -21,7 +21,8 @@ async fn main() -> anyhow::Result<()> {
         first_name: "Moritz".to_owned(),
         last_name: "Bischof".to_owned(),
         email: "moritz.bischof1@gmail.com".to_owned(),
-        role: Role::User
+        disabled: None,
+        role: Role::User,
     }
     .insert(&mut *db.acquire().await?)
     .await?;
@@ -40,6 +41,7 @@ async fn main() -> anyhow::Result<()> {
         UpdateName {
             first_name: "NewFirstName".to_owned(),
             last_name: "NewLastName".to_owned(),
+            disabled: Some("Reason".to_owned()),
         },
     )
     .await?;
@@ -71,6 +73,7 @@ struct User {
     email: String,
     #[ormx(custom_type)]
     role: Role,
+    disabled: Option<String>,
     // don't include this field into `InsertUser` since it has a default value
     // generate `User::set_last_login(Option<NaiveDateTime>) -> Result<()>`
     #[ormx(default, set)]
@@ -83,9 +86,12 @@ struct User {
 struct UpdateName {
     first_name: String,
     last_name: String,
+    disabled: Option<String>,
 }
 
 #[derive(Debug, Copy, Clone, sqlx::Type)]
+#[sqlx(rename = "user_role")]
+#[sqlx(rename_all = "lowercase")]
 enum Role {
     User,
     Admin,

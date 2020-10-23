@@ -1,15 +1,17 @@
 //! Common functionality used for all database backends
 
-mod table;
+use proc_macro2::TokenStream;
+use quote::quote;
+use syn::{Ident, Type, Visibility};
+
 pub use table::*;
 
 use crate::attrs::Insertable;
 use crate::backend::Backend;
 use crate::patch::Patch;
 use crate::table::Table;
-use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{Ident, Type, Visibility};
+
+mod table;
 
 pub(crate) fn getters<B: Backend>(table: &Table) -> TokenStream {
     let column_list = table.column_list::<B>();

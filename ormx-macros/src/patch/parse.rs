@@ -1,9 +1,12 @@
-use super::Patch;
+use std::convert::TryFrom;
+
+use syn::{Data, DeriveInput, Error, Field, Result};
+
 use crate::attrs::{parse_attrs, PatchAttr, PatchFieldAttr};
 use crate::patch::PatchField;
 use crate::utils::{missing_attr, set_once};
-use std::convert::TryFrom;
-use syn::{Data, DeriveInput, Error, Field, Result};
+
+use super::Patch;
 
 impl TryFrom<&syn::DeriveInput> for Patch {
     type Error = Error;
