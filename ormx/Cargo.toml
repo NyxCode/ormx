@@ -1,11 +1,12 @@
 [package]
 name = "ormx"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Moritz Bischof"]
 edition = "2018"
 license = "MIT"
 description = "lightweight procedural macros bringing orm-like features to sqlx"
 homepage = "https://github.com/NyxCode/ormx"
+repository = "https://github.com/NyxCode/ormx"
 
 [package.metadata.docs.rs]
 features = ["_docs-rs-build"]
