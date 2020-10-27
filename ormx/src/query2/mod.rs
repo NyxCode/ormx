@@ -226,25 +226,32 @@ macro_rules! __build_query {
             $($ae:expr),*;
         )),*;
         $out:path,
-        $bpp:pat = $bpe:expr => { $($bq:literal $(?($be:expr))*)* }
+        $bpp:pat = $bpe:expr => {
+            $($bt:tt)*
+        }
         $($t:tt)*
     ) => {
         $crate::__push_fragments!(
+            // all existing branches
             $((
                 $($bp),*;
                 $($app = $ape,)* $bpp = $bpe;
                 $($aq),*;
                 $($ae),*;
             )),*;
+            // out path
             $out,
-            $($bq),*;
-            $($($be),*),*;
+            // content of new branch
+            { $($bt)* };
+
+            // copy of old branches
             [$(, (
                 $($bp),*;
                 $($app = $ape),*;
                 $($aq),*;
                 $($ae),*;
             ))*];
+            // remaining tokens
             $($t)*
         )
     };
@@ -258,8 +265,7 @@ macro_rules! __push_fragments {
     (
         $(($ ($t:tt)* )),*;
         $out:path,
-        ;
-        ;
+        {};
         [$($y:tt)*];
         $($x:tt)*
     ) => {
@@ -278,8 +284,7 @@ macro_rules! __push_fragments {
             $($ae:expr),*;
         )),*;
         $out:path,
-        $qf:literal $(, $qo:literal)*; // <- the literal
-        $($qe:expr),*;
+        { $qf:literal $($bo:tt)* }; // <- the literal
         [$($y:tt)*];
         $($x:tt)*
     ) => {
@@ -291,8 +296,7 @@ macro_rules! __push_fragments {
                 $($ae),*;
             )),*;
             $out,
-            $($qo),*;
-            $($qe),*;
+            { $($bo)* };
             [$($y)*];
             $($x)*
         }
@@ -306,8 +310,7 @@ macro_rules! __push_fragments {
             $($ae:expr),*;
         )),*;
         $out:path,
-        $($qq:literal),*;
-        $qf:expr $(, $qo:expr),*; // <- the argument
+        { ?($qf:expr) $($bo:tt)* }; // <- the argument
         [$($y:tt)*];
         $($x:tt)*
     ) => {
@@ -319,8 +322,7 @@ macro_rules! __push_fragments {
                 $($ae,)* $qf;
             )),*;
             $out,
-            $($qq),*;
-            $($qo),*;
+            { $($bo)* };
             [$($y)*];
             $($x)*
         }

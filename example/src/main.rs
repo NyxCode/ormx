@@ -1,6 +1,9 @@
+// #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
 use ormx::{Insert, Table};
 use sqlx::PgPool;
+
+// trace_macros!(true);
 
 // To run this example, first run `/scripts/postgres.sh` to start postgres in a docker container and
 // write the database URL to `.env`. Then, source `.env` (`. .env`) and run `cargo run`

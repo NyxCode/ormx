@@ -12,6 +12,7 @@ pub(crate) async fn query_users(
         "FROM users"
         Some(f) = filter => {
             "WHERE first_name LIKE" ?(f)
+            "OR last_name LIKE" ?(f)
         }
         "ORDER BY first_name DESC"
         Some(l) = limit => {
@@ -20,5 +21,7 @@ pub(crate) async fn query_users(
     )
     .fetch_all(db)
     .await?;
+
+
     Ok(result)
 }
