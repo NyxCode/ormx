@@ -3,18 +3,18 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Ident;
 
-use crate::table::{Table, TableField};
+use crate::table::Table;
 
 use super::MySqlBackend;
 
-pub fn impl_insert(table: &Table) -> TokenStream {
+pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
     let insert_ident = match &table.insertable {
         Some(i) => &i.ident,
         None => return quote!(),
     };
 
-    let insert_fields: Vec<&TableField> = table.insertable_fields().collect();
-    let default_fields: Vec<&TableField> = table.default_fields().collect();
+    let insert_fields = table.insertable_fields().collect::<Vec<_>>();
+    let default_fields = table.default_fields().collect::<Vec<_>>();
 
     let id_ident = &table.id.field;
     let table_ident = &table.ident;
@@ -30,17 +30,17 @@ pub fn impl_insert(table: &Table) -> TokenStream {
     let insert_sql = format!(
         "INSERT INTO {} ({}) VALUES ({})",
         table.table,
-        insert_fields.iter().map(|field| &field.column).join(", "),
+        insert_fields.iter().map(|field| field.column()).join(", "),
         std::iter::repeat("?").take(insert_fields.len()).join(", ")
     );
     let query_default_sql = format!(
         "SELECT {} FROM {} WHERE {} = ?",
         default_fields
             .iter()
-            .map(|field| field.fmt_for_select::<MySqlBackend>())
+            .map(|field| field.fmt_for_select())
             .join(", "),
         table.table,
-        table.id.column
+        table.id.column()
     );
     let query_default = if default_fields.is_empty() {
         quote!()
