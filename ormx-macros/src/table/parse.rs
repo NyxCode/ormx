@@ -7,16 +7,26 @@ use crate::attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr};
 use crate::utils::{missing_attr, set_once};
 
 use super::{Table, TableField};
+use crate::backend::Backend;
+use std::marker::PhantomData;
 
 macro_rules! none {
     ($($i:ident),*) => { $( let mut $i = None; )* };
 }
 
-impl TryFrom<&syn::Field> for TableField {
+impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
     type Error = Error;
 
     fn try_from(value: &syn::Field) -> Result<Self> {
         let ident = value.ident.clone().unwrap();
+
+        let reserved_ident = B::RESERVED_IDENTS.contains(&&*ident.to_string().to_uppercase());
+        if reserved_ident {
+            proc_macro_error::emit_warning!(
+                ident.span(),
+                "This is a reserved keyword, you might want to consider choosing a different name."
+            );
+        }
 
         none!(
             column,
@@ -42,22 +52,23 @@ impl TryFrom<&syn::Field> for TableField {
                 TableFieldAttr::Default(..) => set_once(&mut default, true)?,
             }
         }
-
         Ok(TableField {
-            column: column.unwrap_or_else(|| ident.to_string()),
+            column_name: column.unwrap_or_else(|| ident.to_string()),
             field: ident,
             ty: value.ty.clone(),
             custom_type: custom_type.unwrap_or(false),
+            reserved_ident,
             default: default.unwrap_or(false),
             get_one,
             get_optional,
             get_many,
             set,
+            _phantom: PhantomData
         })
     }
 }
 
-impl TryFrom<&syn::DeriveInput> for Table {
+impl <B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
     type Error = Error;
 
     fn try_from(value: &DeriveInput) -> Result<Self> {

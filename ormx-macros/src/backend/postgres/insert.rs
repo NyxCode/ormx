@@ -6,37 +6,40 @@ use syn::Ident;
 use crate::backend::postgres::{PgBackend, PgBindings};
 use crate::table::{Table, TableField};
 
-fn insert_sql(table: &Table, insert_fields: &[&TableField]) -> String {
+fn insert_sql(table: &Table<PgBackend>, insert_fields: &[&TableField<PgBackend>]) -> String {
     format!(
         "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
         table.table,
-        insert_fields.iter().map(|field| &field.column).join(", "),
+        insert_fields.iter().map(|field| field.column()).join(", "),
         PgBindings::default().take(insert_fields.len()).join(", "),
-        table.id.fmt_for_select::<PgBackend>()
+        table.id.fmt_for_select()
     )
 }
 
-fn query_default_sql(table: &Table, default_fields: &[&TableField]) -> String {
+fn query_default_sql(
+    table: &Table<PgBackend>,
+    default_fields: &[&TableField<PgBackend>],
+) -> String {
     format!(
         "SELECT {} FROM {} WHERE {} = {}",
         default_fields
             .iter()
-            .map(|field| field.fmt_for_select::<PgBackend>())
+            .map(|field| field.fmt_for_select())
             .join(", "),
         table.table,
-        table.id.column,
+        table.id.column(),
         PgBindings::default().next().unwrap()
     )
 }
 
-pub fn impl_insert(table: &Table) -> TokenStream {
+pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
     let insert_ident = match &table.insertable {
         Some(i) => &i.ident,
         None => return quote!(),
     };
 
-    let insert_fields: Vec<&TableField> = table.insertable_fields().collect();
-    let default_fields: Vec<&TableField> = table.default_fields().collect();
+    let insert_fields: Vec<&TableField<PgBackend>> = table.insertable_fields().collect();
+    let default_fields: Vec<&TableField<PgBackend>> = table.default_fields().collect();
 
     let id_ident = &table.id.field;
     let table_ident = &table.ident;

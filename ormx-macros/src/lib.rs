@@ -81,6 +81,7 @@ mod utils;
 /// `#[ormx(custom_type)]`. This will use a column type override for querying this field
 /// (see [the sqlx docs on this](https://docs.rs/sqlx/0.4.0-beta.1/sqlx/macro.query_as.html#column-type-override-infer-from-struct-field)).
 ///
+#[proc_macro_error::proc_macro_error]
 #[proc_macro_derive(Table, attributes(ormx))]
 pub fn derive_table(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);
@@ -92,6 +93,7 @@ pub fn derive_table(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 /// Derives [Patch](trait.Patch.html).
+#[proc_macro_error::proc_macro_error]
 #[proc_macro_derive(Patch, attributes(ormx))]
 pub fn derive_patch(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);

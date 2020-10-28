@@ -7,13 +7,15 @@ use crate::table::Table;
 
 mod insert;
 
+#[derive(Clone)]
 pub struct MySqlBackend;
 
 impl Backend for MySqlBackend {
     const QUOTE: char = '`';
+    const RESERVED_IDENTS: &'static [&'static str] = &[];
     type Bindings = MySqlBindings;
 
-    fn impl_insert(table: &Table) -> TokenStream {
+    fn impl_insert(table: &Table<Self>) -> TokenStream {
         insert::impl_insert(table)
     }
 }

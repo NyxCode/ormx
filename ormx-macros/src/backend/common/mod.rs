@@ -13,8 +13,8 @@ use crate::table::Table;
 
 mod table;
 
-pub(crate) fn getters<B: Backend>(table: &Table) -> TokenStream {
-    let column_list = table.column_list::<B>();
+pub(crate) fn getters<B: Backend>(table: &Table<B>) -> TokenStream {
+    let column_list = table.select_column_list();
     let vis = &table.vis;
     let mut getters = TokenStream::new();
 
@@ -23,7 +23,7 @@ pub(crate) fn getters<B: Backend>(table: &Table) -> TokenStream {
             "SELECT {} FROM {} WHERE {} = {}",
             column_list,
             table.table,
-            field.column,
+            field.column(),
             B::Bindings::default().next().unwrap()
         );
 
@@ -90,7 +90,7 @@ pub fn get_many(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> Tok
     }
 }
 
-pub fn setters<B: Backend>(table: &Table) -> TokenStream {
+pub fn setters<B: Backend>(table: &Table<B>) -> TokenStream {
     let vis = &table.vis;
     let mut setters = TokenStream::new();
 
@@ -103,9 +103,9 @@ pub fn setters<B: Backend>(table: &Table) -> TokenStream {
             let sql = format!(
                 "UPDATE {} SET {} = {} WHERE {} = {}",
                 table.table,
-                field.column,
+                field.column(),
                 bindings.next().unwrap(),
-                table.id.column,
+                table.id.column(),
                 bindings.next().unwrap(),
             );
             setters.extend(quote! {
@@ -182,7 +182,7 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
     }
 }
 
-pub(crate) fn insert_struct(table: &Table) -> TokenStream {
+pub(crate) fn insert_struct<B: Backend>(table: &Table<B>) -> TokenStream {
     let Insertable { ident, attrs } = match &table.insertable {
         Some(i) => i,
         None => return quote!(),

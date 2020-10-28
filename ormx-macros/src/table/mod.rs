@@ -7,73 +7,85 @@ use syn::{DeriveInput, Result, Type, Visibility};
 
 use crate::attrs::{Getter, Insertable};
 use crate::backend::{Backend, Implementation};
+use std::borrow::Cow;
+use std::marker::PhantomData;
 
 mod parse;
 
-pub struct Table {
+pub struct Table<B: Backend> {
     pub ident: Ident,
     pub vis: Visibility,
     pub table: String,
-    pub id: TableField,
-    pub fields: Vec<TableField>,
+    pub id: TableField<B>,
+    pub fields: Vec<TableField<B>>,
     pub insertable: Option<Insertable>,
 }
 
 #[derive(Clone)]
-pub struct TableField {
+pub struct TableField<B: Backend> {
     pub field: Ident,
     pub ty: Type,
-    pub column: String,
+    pub column_name: String,
     pub custom_type: bool,
+    pub reserved_ident: bool,
     pub default: bool,
     pub get_one: Option<Getter>,
     pub get_optional: Option<Getter>,
     pub get_many: Option<Getter>,
     pub set: Option<Ident>,
+    pub _phantom: PhantomData<*const B>,
 }
 
-impl Table {
-    pub fn fields_except_id(&self) -> impl Iterator<Item = &TableField> + Clone {
+impl<B: Backend> Table<B> {
+    pub fn fields_except_id(&self) -> impl Iterator<Item = &TableField<B>> + Clone {
         let id = self.id.field.clone();
         self.fields.iter().filter(move |field| field.field != id)
     }
 
-    pub fn insertable_fields(&self) -> impl Iterator<Item = &TableField> + Clone {
+    pub fn insertable_fields(&self) -> impl Iterator<Item = &TableField<B>> + Clone {
         self.fields_except_id().filter(|field| !field.default)
     }
 
-    pub fn default_fields(&self) -> impl Iterator<Item = &TableField> + Clone {
+    pub fn default_fields(&self) -> impl Iterator<Item = &TableField<B>> + Clone {
         self.fields.iter().filter(|field| field.default)
     }
 
-    pub fn column_list<B: Backend>(&self) -> String {
+    pub fn select_column_list(&self) -> String {
         self.fields
             .iter()
-            .map(|field| field.fmt_for_select::<B>())
+            .map(|field| field.fmt_for_select())
             .join(", ")
     }
 }
 
-impl TableField {
-    pub fn fmt_for_select<B: Backend>(&self) -> String {
+impl<B: Backend> TableField<B> {
+    pub fn fmt_for_select(&self) -> String {
         if self.custom_type {
             format!(
                 "{} AS {}{}: _{}",
-                self.column,
+                self.column(),
                 B::QUOTE,
                 self.field,
                 B::QUOTE
             )
-        } else if self.field == self.column {
-            self.column.clone()
+        } else if self.field == self.column_name {
+            self.column().into()
         } else {
-            format!("{} AS {}", self.column, self.field)
+            format!("{} AS {}", self.column(), self.field)
+        }
+    }
+
+    pub fn column<'a>(&'a self) -> Cow<'a, str> {
+        if self.reserved_ident {
+            format!("{}{}{}", B::QUOTE, self.column_name, B::QUOTE).into()
+        } else {
+            Cow::Borrowed(&self.column_name)
         }
     }
 }
 
 impl Getter {
-    pub fn or_fallback(&self, field: &TableField) -> (Ident, Type) {
+    pub fn or_fallback<B: Backend>(&self, field: &TableField<B>) -> (Ident, Type) {
         let ident = self
             .func
             .clone()
