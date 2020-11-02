@@ -140,11 +140,19 @@ where
         })
     }
 
+    /// Delete a row from the database
+    fn delete_row<'a, 'c: 'a>(
+        db: impl Executor<'c, Database = Db> + 'a,
+        id: Self::Id
+    ) -> BoxFuture<'a, Result<()>>;
+
     /// Deletes this row from the database.
     fn delete<'a, 'c: 'a>(
         self,
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>>;
+    ) -> BoxFuture<'a, Result<()>> {
+        Self::delete_row(db, self.id())
+    }
 }
 
 /// A type which can be used to "patch" a row, updating multiple fields at once.

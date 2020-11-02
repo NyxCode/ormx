@@ -139,8 +139,8 @@ fn stream_all_paginated<B: Backend>(table: &Table<B>, column_list: &str) -> Toke
 }
 
 fn delete<B: Backend>(table: &Table<B>) -> TokenStream {
-    let id_ident = &table.id.field;
     let box_future = crate::utils::box_future();
+    let id_ty = &table.id.ty;
     let delete_sql = format!(
         "DELETE FROM {} WHERE {} = {}",
         table.table,
@@ -149,12 +149,12 @@ fn delete<B: Backend>(table: &Table<B>) -> TokenStream {
     );
 
     quote! {
-        fn delete<'a, 'c: 'a>(
-            self,
+        fn delete_row<'a, 'c: 'a>(
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
+            id: #id_ty
         ) -> #box_future<'a, sqlx::Result<()>> {
             Box::pin(async move {
-                sqlx::query!(#delete_sql, self.#id_ident)
+                sqlx::query!(#delete_sql, id)
                     .execute(db)
                     .await?;
                 Ok(())
