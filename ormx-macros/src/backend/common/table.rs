@@ -153,11 +153,17 @@ fn delete<B: Backend>(table: &Table<B>) -> TokenStream {
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
             id: #id_ty
         ) -> #box_future<'a, sqlx::Result<()>> {
+            use sqlx::Done;
+
             Box::pin(async move {
-                sqlx::query!(#delete_sql, id)
+                let result = sqlx::query!(#delete_sql, id)
                     .execute(db)
                     .await?;
-                Ok(())
+                if result.rows_affected() == 0 {
+                    Err(sqlx::Error::RowNotFound)
+                } else {
+                    Ok(())
+                }
             })
         }
     }
