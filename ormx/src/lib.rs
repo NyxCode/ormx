@@ -143,7 +143,7 @@ where
     /// Delete a row from the database
     fn delete_row<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
-        id: Self::Id
+        id: Self::Id,
     ) -> BoxFuture<'a, Result<()>>;
 
     /// Deletes this row from the database.

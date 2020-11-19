@@ -63,12 +63,12 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             get_optional,
             get_many,
             set,
-            _phantom: PhantomData
+            _phantom: PhantomData,
         })
     }
 }
 
-impl <B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
+impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
     type Error = Error;
 
     fn try_from(value: &DeriveInput) -> Result<Self> {

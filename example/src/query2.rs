@@ -22,6 +22,5 @@ pub(crate) async fn query_users(
     .fetch_all(db)
     .await?;
 
-
     Ok(result)
 }

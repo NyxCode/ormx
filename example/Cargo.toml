@@ -14,6 +14,6 @@ simple_logger = "1"
 log = "0.4"
 
 [dependencies.sqlx]
-version = "0.4.0-beta.1"
+version = "0.4"
 default-features = false
-features = ["macros", "postgres", "runtime-tokio", "chrono", "offline"]
+features = ["macros", "postgres", "runtime-tokio-rustls", "chrono", "offline"]

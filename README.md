@@ -7,13 +7,13 @@ Lightweight macros for [sqlx](https://github.com/launchbadge/sqlx)
 Add ormx and sqlx to your `Cargo.toml`
 ```toml
 [dependencies.ormx]
-version = "0.1"
+version = "0.2"
 features = ["mysql"]
 
 [dependencies.sqlx]
-version = "0.4.0-beta.1"
+version = "0.4"
 default-features = false
-features = ["macros", "mysql", "runtime-tokio"]
+features = ["macros", "mysql", "runtime-tokio-rustls"]
 ```
 Right now, ormx supports mysql/mariadb and postgres.
 ## what does it do? 

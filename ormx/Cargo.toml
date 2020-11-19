@@ -1,6 +1,6 @@
 [package]
 name = "ormx"
-version = "0.1.7"
+version = "0.2.0"
 authors = ["Moritz Bischof"]
 edition = "2018"
 license = "MIT"
@@ -17,14 +17,14 @@ mysql = ["sqlx/mysql", "ormx-macros/mysql"]
 sqlite = ["sqlx/sqlite", "ormx-macros/sqlite"]
 postgres = ["sqlx/postgres", "ormx-macros/postgres"]
 
-_docs-rs-build = ["sqlx/runtime-tokio", "postgres"]
+_docs-rs-build = ["sqlx/runtime-tokio-rustls", "postgres"]
 
 [dependencies]
 ormx-macros = { path = "../ormx-macros", version = "0.1" }
 futures = "0.3"
 
 [dependencies.sqlx]
-version = "0.4.0-beta.1"
+version = "0.4"
 default-features = false
 features = ["macros"]
 
