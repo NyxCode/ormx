@@ -1,6 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::export::TokenStreamExt;
+use quote::{TokenStreamExt, quote};
 
 use crate::backend::Backend;
 use crate::table::Table;
