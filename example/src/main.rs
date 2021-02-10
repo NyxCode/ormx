@@ -93,7 +93,7 @@ struct UpdateName {
 }
 
 #[derive(Debug, Copy, Clone, sqlx::Type)]
-#[sqlx(rename = "user_role")]
+#[sqlx(type_name = "user_role")]
 #[sqlx(rename_all = "lowercase")]
 enum Role {
     User,

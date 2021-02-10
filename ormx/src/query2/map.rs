@@ -1,5 +1,5 @@
 use futures::stream::BoxStream;
-use sqlx::{Database, Executor, IntoArguments, query::{Map, TryMapRow}};
+use sqlx::{Database, Executor, IntoArguments, Error, query::Map};
 
 #[doc(hidden)]
 #[macro_export]
@@ -30,7 +30,7 @@ macro_rules! make_conditional_map_ty {
             DB: Database,
             O: Send + Unpin,
             $(
-                $ff: TryMapRow<DB, Output = O>,
+                $ff: FnMut(DB::Row) -> Result<O, Error> + Send,
                 $fa: 'q + Send + IntoArguments<'q, DB>,
             )*
         {
@@ -41,7 +41,7 @@ macro_rules! make_conditional_map_ty {
             DB: Database,
             O: Send + Unpin,
             $(
-                $ff: TryMapRow<DB, Output = O>,
+                $ff: FnMut(DB::Row) -> Result<O, Error> + Send,
                 $fa: 'q + Send + IntoArguments<'q, DB>,
             )*
         {
