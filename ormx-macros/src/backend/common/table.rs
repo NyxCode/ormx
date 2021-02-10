@@ -146,13 +146,19 @@ fn delete<B: Backend>(table: &Table<B>) -> TokenStream {
         table.id.column(),
         B::Bindings::default().next().unwrap()
     );
+    #[cfg(feature = "mysql")]
+    let result_import = quote!(sqlx::mysql::MySqlQueryResult);
+    #[cfg(feature = "postgres")]
+    let result_import = quote!(sqlx::postgres::PgQueryResult);
+    #[cfg(feature = "sqlite")]
+    let result_import = quote!(sqlx::sqlite::SqliteQueryResult);
 
     quote! {
         fn delete_row<'a, 'c: 'a>(
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
             id: #id_ty
         ) -> #box_future<'a, sqlx::Result<()>> {
-            use sqlx::Done;
+            use #result_import;
 
             Box::pin(async move {
                 let result = sqlx::query!(#delete_sql, id)
