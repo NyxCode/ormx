@@ -7,7 +7,7 @@ Lightweight macros for [sqlx](https://github.com/launchbadge/sqlx)
 Add ormx and sqlx to your `Cargo.toml`
 ```toml
 [dependencies.ormx]
-version = "0.5"
+version = "0.6"
 features = ["mysql"]
 
 [dependencies.sqlx]

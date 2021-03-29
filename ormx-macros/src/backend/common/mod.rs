@@ -194,10 +194,35 @@ pub(crate) fn insert_struct<B: Backend>(table: &Table<B>) -> TokenStream {
         quote!(#vis #ident: #ty)
     });
 
+    let from_impl = impl_from_for_insert_struct(table, ident);
     quote! {
         #(#attrs)*
         #vis struct #ident {
             #( #insert_fields, )*
+        }
+
+        #from_impl
+    }
+}
+
+fn impl_from_for_insert_struct<B: Backend>(table: &Table<B>, insert_struct: &Ident) -> TokenStream {
+    let table_ident = &table.ident;
+
+    let fields = table
+        .insertable_fields()
+        .map(|field| {
+            let ident = &field.field;
+            quote!(#ident: v.#ident,)
+        })
+        .collect::<TokenStream>();
+
+    quote! {
+        impl From<#table_ident> for #insert_struct {
+            fn from(v: #table_ident) -> Self {
+                Self {
+                    #fields
+                }
+            }
         }
     }
 }
