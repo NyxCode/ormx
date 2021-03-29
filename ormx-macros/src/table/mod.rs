@@ -43,7 +43,7 @@ impl<B: Backend> Table<B> {
     }
 
     pub fn insertable_fields(&self) -> impl Iterator<Item = &TableField<B>> + Clone {
-        self.fields_except_id().filter(|field| !field.default)
+        self.fields.iter().filter(|field| !field.default)
     }
 
     pub fn default_fields(&self) -> impl Iterator<Item = &TableField<B>> + Clone {
@@ -75,7 +75,7 @@ impl<B: Backend> TableField<B> {
         }
     }
 
-    pub fn column<'a>(&'a self) -> Cow<'a, str> {
+    pub fn column(&self) -> Cow<str> {
         if self.reserved_ident {
             format!("{}{}{}", B::QUOTE, self.column_name, B::QUOTE).into()
         } else {

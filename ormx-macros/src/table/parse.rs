@@ -110,13 +110,6 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
             })?
             .clone();
 
-        if id.default {
-            return Err(Error::new(
-                Span::call_site(),
-                "id field cannot be annotated with #[ormx(default)]",
-            ));
-        }
-
         if insertable.is_none() && fields.iter().any(|field| field.default) {
             return Err(Error::new(
                 Span::call_site(),

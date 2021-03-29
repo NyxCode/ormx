@@ -26,8 +26,9 @@ mod utils;
 /// ```
 ///
 /// # The ID
-/// It is required that every table contains a database-generated ID column, which uniquely
-/// identifies a row. Probably, you would want to use an auto-incrementing integer for this.
+/// It is required that every table contains an ID column, which uniquely
+/// identifies a row.  
+/// Probably, you would want to use an auto-incrementing integer for this.  
 /// This is a central requirement of ormx, and if your table does not fulfill this requirement, ormx
 /// is not what you are looking for.
 ///
@@ -36,7 +37,8 @@ mod utils;
 ///
 /// # Insertable
 /// ormx will generate a helper struct for inserting rows into the database when using
-/// `#[ormx(insertable)]`.  This struct will contain all fields of the struct, except
+/// `#[ormx(insertable)]`.  
+/// This struct will contain all fields of the struct, except
 /// - the ID
 /// - fields annotated with `#[ormx(default)]`
 ///
@@ -48,17 +50,17 @@ mod utils;
 ///
 /// # Accessors: Getters
 /// ormx will generate accessor functions for fields annotated with `#[ormx(get_one)]`,
-/// `#[ormx(get_optional)]` and `#[ormx(get_many)]`. These functions can be used to query a row by
-/// the value of the annotated field.
+/// `#[ormx(get_optional)]` and `#[ormx(get_many)]`.
+/// These functions can be used to query a row by the value of the annotated field.
 ///
 /// The generated function will have these signature:  
-/// `#[ormx(get_one)]`:
+/// **`#[ormx(get_one)]`**:  
 /// `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Self>`
 ///
-/// `#[ormx(get_optional)]`:
+/// **`#[ormx(get_optional)]`**:  
 /// `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Option<Self>>`
 ///
-/// `#[ormx(get_many)]`:
+/// **`#[ormx(get_many)]`**:  
 /// `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Vec<Self>>`
 ///
 /// By default, the function will be named `get_by_{field_name)`, though this can be changed by
@@ -70,17 +72,18 @@ mod utils;
 /// ormx will generate accessor functions for fields annotated with `#[ormx(set)]`.
 /// These functions can be used to update a single field of an entity.
 ///
-/// The generated function will have these signature:  
-/// `#[ormx(set)]`: `{pub} async fn set_{field_name}(&mut self, {field_type}) -> Result<Self>`  
+/// The generated function will have these signature:
+/// **`#[ormx(set)]`**:
+/// `{pub} async fn set_{field_name}(&mut self, {field_type}) -> Result<Self>`
 ///
 /// By default, the function will be named `set_{field_name)`, though this can be changed by
 /// supplying a custom name: `#[ormx(set = set_name)]`.
 ///
 /// # Custom types
 /// When using custom types (which implement `sqlx::Type`), the field has to annotated with
-/// `#[ormx(custom_type)]`. This will use a column type override for querying this field
+/// `#[ormx(custom_type)]`.
+/// This will use a column type override for querying this field
 /// (see [the sqlx docs on this](https://docs.rs/sqlx/0.4.0-beta.1/sqlx/macro.query_as.html#column-type-override-infer-from-struct-field)).
-///
 #[proc_macro_error::proc_macro_error]
 #[proc_macro_derive(Table, attributes(ormx))]
 pub fn derive_table(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

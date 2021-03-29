@@ -1,2 +1,2 @@
 [workspace]
-members = ["ormx-macros", "ormx", "example"]
+members = ["ormx-macros", "ormx", "example-postgres", "example-mysql"]

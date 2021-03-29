@@ -5,7 +5,7 @@ use sqlx::PgPool;
 
 // trace_macros!(true);
 
-// To run this example, first run `/scripts/postgres.sh` to start postgres in a docker container and
+// To run this example-postgres, first run `/scripts/postgres.sh` to start postgres in a docker container and
 // write the database URL to `.env`. Then, source `.env` (`. .env`) and run `cargo run`
 
 mod query2;
@@ -21,6 +21,7 @@ async fn main() -> anyhow::Result<()> {
 
     log::info!("insert a new row into the database");
     let mut new = InsertUser {
+        user_id: 1,
         first_name: "Moritz".to_owned(),
         last_name: "Bischof".to_owned(),
         email: "moritz.bischof1@gmail.com".to_owned(),
