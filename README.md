@@ -1,8 +1,34 @@
-# ormx
-Lightweight macros for [sqlx](https://github.com/launchbadge/sqlx)    
+<h1 align="center">ormx</h1>
+<div align="center">
+ <strong>
+   lightweight macros for <a href="https://github.com/launchbadge/sqlx">sqlx</a>  
+ </strong>
+</div>
 
-[![Crate](https://img.shields.io/crates/v/ormx.svg)](https://crates.io/crates/ormx)
-[![API](https://docs.rs/ormx/badge.svg)](https://docs.rs/ormx)
+<br />
+
+<div align="center">
+  <!-- Version -->
+  <a href="https://crates.io/crates/ormx">
+    <img src="https://img.shields.io/crates/v/ormx.svg?style=flat-square"
+    alt="Crates.io version" />
+  </a>
+  <!-- Discord -->
+  <a href="https://discord.gg/mrZz4Wv8r2">
+    <img src="https://img.shields.io/discord/665528275556106240?style=flat-square" alt="chat" />
+  </a>
+  <!-- Docs -->
+  <a href="https://docs.rs/ormx">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+      alt="docs.rs docs" />
+  </a>
+  <!-- Downloads -->
+  <a href="https://crates.io/crates/ormx">
+    <img src="https://img.shields.io/crates/d/ormx.svg?style=flat-square"
+      alt="Download" />
+  </a>
+</div>
+
 ## getting started
 Add ormx and sqlx to your `Cargo.toml`
 ```toml
