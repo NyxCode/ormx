@@ -1,11 +1,11 @@
 [package]
-name = "example"
+name = "example-mysql"
 version = "0.1.0"
 authors = ["moritz"]
 edition = "2018"
 
 [dependencies]
-ormx = { path = "../ormx", features = ["postgres"] }
+ormx = { path = "../ormx", features = ["mysql"] }
 tokio = { version = "1.1", features = ["full"] }
 anyhow = "1"
 dotenv = "0.15"
@@ -16,4 +16,4 @@ log = "0.4"
 [dependencies.sqlx]
 version = "0.5"
 default-features = false
-features = ["macros", "postgres", "runtime-tokio-rustls", "chrono", "offline"]
+features = ["macros", "mysql", "runtime-tokio-rustls", "chrono", "offline"]
