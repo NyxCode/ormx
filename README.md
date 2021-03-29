@@ -26,6 +26,10 @@ it is required that every table contains an id column, which uniquely
 identifies a row. probably, you would want to use an auto-incrementing integer for this.
 this is a central requirement of ormx, and if your table does not fulfill this requirement, ormx
 is not what you are looking for.
+
+## help
+if you encounter an issue or have questions, feel free to ask in [`#ormx` on the sqlx discord](https://discord.gg/mrZz4Wv8r2).
+
 ## [mysql example](https://github.com/NyxCode/ormx/tree/master/example-mysql/src/main.rs)
 ## [postgres example](https://github.com/NyxCode/ormx/tree/master/example-postgres/src/main.rs)
 ## features
