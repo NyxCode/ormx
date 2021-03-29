@@ -68,6 +68,7 @@ struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]
     #[ormx(get_one = get_by_user_id)]
+    #[ormx(default)]
     user_id: i32,
     first_name: String,
     last_name: String,
