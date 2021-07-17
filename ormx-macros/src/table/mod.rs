@@ -46,6 +46,11 @@ impl<B: Backend> Table<B> {
         self.fields.iter().filter(|field| !field.default)
     }
 
+    pub fn insertable_fields_except_id(&self) -> impl Iterator<Item = &TableField<B>> + Clone {
+        let id = self.id.field.clone();
+        self.fields.iter().filter(move |field| field.field != id && !field.default)
+    }
+
     pub fn default_fields(&self) -> impl Iterator<Item = &TableField<B>> + Clone {
         self.fields.iter().filter(|field| field.default)
     }

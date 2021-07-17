@@ -59,7 +59,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
     let box_future = crate::utils::box_future();
     let mut bindings = B::Bindings::default();
     let mut assignments = vec![];
-    for field in table.fields_except_id() {
+    for field in table.insertable_fields_except_id() {
         let fragment = format!("{} = {}", field.column(), bindings.next().unwrap());
         assignments.push(fragment);
     }
@@ -73,7 +73,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
         bindings.next().unwrap()
     );
     let id_argument = &table.id.field;
-    let other_arguments = table.fields_except_id().map(|field| {
+    let other_arguments = table.insertable_fields_except_id().map(|field| {
         let ident = &field.field;
         let mut out = quote!(self.#ident);
 
