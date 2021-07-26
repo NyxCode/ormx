@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::Ident;
 
@@ -7,16 +7,24 @@ use crate::backend::postgres::{PgBackend, PgBindings};
 use crate::table::{Table, TableField};
 
 fn insert_sql(table: &Table<PgBackend>, insert_fields: &[&TableField<PgBackend>]) -> String {
-    format!(
-        "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
-        table.table,
-        insert_fields.iter().map(|field| field.column()).join(", "),
-        PgBindings::default().take(insert_fields.len()).join(", "),
-        table
-            .default_fields()
-            .map(TableField::fmt_for_select)
-            .join(", ")
-    )
+    let columns = insert_fields.iter().map(|field| field.column()).join(", ");
+    let fields = PgBindings::default().take(insert_fields.len()).join(", ");
+    let returning_fields = table
+        .default_fields()
+        .map(TableField::fmt_for_select)
+        .join(", ");
+
+    if returning_fields.is_empty() {
+        format!(
+            "INSERT INTO {} ({}) VALUES ({})",
+            table.table, columns, fields
+        )
+    } else {
+        format!(
+            "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
+            table.table, columns, fields, returning_fields
+        )
+    }
 }
 
 pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
@@ -52,6 +60,12 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
         })
         .collect::<Vec<TokenStream>>();
 
+    let fetch_funtion = if default_fields.is_empty() {
+        Ident::new("execute", Span::call_site())
+    } else {
+        Ident::new("fetch_one", Span::call_site())
+    };
+
     let box_future = crate::utils::box_future();
     quote! {
         impl ormx::Insert for #insert_ident {
@@ -63,7 +77,7 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
             ) -> #box_future<sqlx::Result<Self::Table>> {
                 Box::pin(async move {
                     let _generated = sqlx::query!(#insert_sql, #( #insert_field_exprs, )*)
-                        .fetch_one(db as &mut sqlx::PgConnection)
+                        .#fetch_funtion(db as &mut sqlx::PgConnection)
                         .await?;
 
                     Ok(Self::Table {
