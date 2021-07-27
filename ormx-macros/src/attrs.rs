@@ -29,6 +29,9 @@ pub enum TableFieldAttr {
     GetOptional(Getter),
     // get_many [= <ident>]? [(<type>)]?
     GetMany(Getter),
+    // get_many [= <ident>]? [(<type>)]?
+    #[cfg(feature = "postgres")]
+    GetAny(Getter),
     // set [= <ident>]?
     Set(Option<Ident>),
 }
@@ -95,14 +98,16 @@ pub fn parse_attrs<A: Parse>(attrs: &[Attribute]) -> Result<Vec<A>> {
 macro_rules! impl_parse {
     // entry point
     ($i:ident {
-        $( $s:literal => $v:ident( $($t:tt)* ) ),*
+        $( $(#[cfg($cfg_attr: meta)])? $s:literal => $v:ident( $($t:tt)* ) ),*
     }) => {
         impl syn::parse::Parse for $i {
             #[allow(clippy::redundant_closure_call)]
             fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
                 let ident = input.parse::<syn::Ident>()?;
                 match &*ident.to_string() {
-                    $( $s => (impl_parse!($($t)*))(input).map(Self::$v), )*
+                    $(
+                        $(#[cfg($cfg_attr)])?
+                        $s => (impl_parse!($($t)*))(input).map(Self::$v), )*
                     _ => Err(input.error("unknown attribute"))
                 }
             }
@@ -141,6 +146,8 @@ impl_parse!(TableFieldAttr {
     "get_one" => GetOne(Getter),
     "get_optional" => GetOptional(Getter),
     "get_many" => GetMany(Getter),
+    #[cfg(feature = "postgres")]
+    "get_any" => GetAny(Getter),
     "set" => Set((= Ident)?),
     "custom_type" => CustomType(),
     "default" => Default()
