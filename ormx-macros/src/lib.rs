@@ -50,7 +50,7 @@ mod utils;
 ///
 /// # Accessors: Getters
 /// ormx will generate accessor functions for fields annotated with `#[ormx(get_one)]`,
-/// `#[ormx(get_optional)]` and `#[ormx(get_many)]`.
+/// `#[ormx(get_optional)]`, `#[ormx(get_many)]` and `#[ormx(get_any)]`.
 /// These functions can be used to query a row by the value of the annotated field.
 ///
 /// The generated function will have these signature:  
@@ -62,6 +62,9 @@ mod utils;
 ///
 /// **`#[ormx(get_many)]`**:  
 /// `{pub} async fn get_by_{field_name}(&{field_type}) -> Result<Vec<Self>>`
+///
+/// **`#[ormx(get_any)]`**:  
+/// `{pub} async fn get_by_{field_name}(&[{field_type}]) -> Result<Vec<Self>>`
 ///
 /// By default, the function will be named `get_by_{field_name)`, though this can be changed by
 /// supplying a custom name: `#[ormx(get_one = by_id)]`.
