@@ -1,7 +1,7 @@
 // #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
 use ormx::{Insert, Table};
-use sqlx::PgPool;
+use sqlx::{PgConnection, PgPool};
 
 // trace_macros!(true);
 
@@ -18,6 +18,7 @@ async fn main() -> anyhow::Result<()> {
         .init()?;
 
     let db = PgPool::connect(&dotenv::var("DATABASE_URL")?).await?;
+    let mut conn = db.acquire().await?;
 
     log::info!("insert a new row into the database");
     let mut new = InsertUser {
@@ -28,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
         disabled: None,
         role: Role::User,
     }
-    .insert(&mut *db.acquire().await?)
+    .insert(&mut conn)
     .await?;
 
     log::info!("update a single field");
@@ -60,7 +61,32 @@ async fn main() -> anyhow::Result<()> {
     log::info!("delete the user from the database");
     new.delete(&db).await?;
 
+    log::info!("inserting 3 dummy users with ids: 1, 2 & 3");
+    insert_dummy_user(&mut conn, 2).await?;
+    insert_dummy_user(&mut conn, 3).await?;
+    insert_dummy_user(&mut conn, 4).await?;
+
+    log::info!("getting many users by any user id (using 'get_any' getter)");
+    let users = User::get_many_by_user_ids(&mut conn, &[2, 4]).await?;
+    dbg!(&users);
+    assert_eq!(users.len(), 2);
+
+    log::info!("empty user table");
+    sqlx::query!("DELETE FROM users").execute(&db).await?;
     Ok(())
+}
+
+async fn insert_dummy_user(conn: &mut PgConnection, id: i32) -> Result<User, sqlx::Error> {
+    InsertUser {
+        user_id: id,
+        first_name: "Dummy".to_owned(),
+        last_name: "Dummy".to_owned(),
+        email: format!("dummy{}@mail.com", id),
+        disabled: None,
+        role: Role::User,
+    }
+    .insert(conn)
+    .await
 }
 
 #[derive(Debug, ormx::Table)]
@@ -69,6 +95,7 @@ struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]
     #[ormx(get_one = get_by_user_id)]
+    #[ormx(get_any = get_many_by_user_ids)]
     user_id: i32,
     first_name: String,
     last_name: String,
