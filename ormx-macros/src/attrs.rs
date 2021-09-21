@@ -49,6 +49,7 @@ pub enum PatchAttr {
 pub enum PatchFieldAttr {
     // column = <string>
     Column(String),
+    CustomType(())
 }
 
 impl Parse for Getter {
@@ -153,5 +154,6 @@ impl_parse!(PatchAttr {
 });
 
 impl_parse!(PatchFieldAttr {
-    "column" => Column(= String)
+    "column" => Column(= String),
+    "custom_type" => CustomType()
 });

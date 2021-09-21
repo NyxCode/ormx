@@ -28,17 +28,17 @@ pub(crate) fn getters<B: Backend>(table: &Table<B>) -> TokenStream {
         );
 
         if let Some(getter) = &field.get_one {
-            let (func, arg) = getter.or_fallback(&field);
+            let (func, arg) = getter.or_fallback(field);
             getters.extend(get_one(vis, &func, &arg, &sql));
         }
 
         if let Some(getter) = &field.get_optional {
-            let (func, arg) = getter.or_fallback(&field);
+            let (func, arg) = getter.or_fallback(field);
             getters.extend(get_optional(vis, &func, &arg, &sql));
         }
 
         if let Some(getter) = &field.get_many {
-            let (func, arg) = getter.or_fallback(&field);
+            let (func, arg) = getter.or_fallback(field);
             getters.extend(get_many(vis, &func, &arg, &sql));
         }
     }
@@ -140,6 +140,18 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
         .iter()
         .map(|field| &field.ident)
         .collect::<Vec<&Ident>>();
+    let query_args = &patch
+        .fields
+        .iter()
+        .map(|field| {
+            let field_ident = &field.ident;
+            let field_ty = &field.ty;
+            match field.custom_type {
+                false => quote!(#field_ident),
+                true => quote!(#field_ident as #field_ty)
+            }
+        })
+        .collect::<Vec<TokenStream>>();
 
     let mut bindings = B::Bindings::default();
     let mut assignments = Vec::with_capacity(patch.fields.len());
@@ -172,7 +184,7 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
                 id: <Self::Table as ormx::Table>::Id,
             ) -> #box_future<'a, sqlx::Result<()>> {
                 Box::pin(async move {
-                    sqlx::query!(#sql, #( self.#field_idents, )* id)
+                    sqlx::query!(#sql, #( self.#query_args, )* id)
                         .execute(db)
                         .await?;
                     Ok(())

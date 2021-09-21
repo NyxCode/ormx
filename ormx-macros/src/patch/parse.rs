@@ -51,9 +51,11 @@ impl TryFrom<&syn::Field> for PatchField {
         let ident = value.ident.clone().unwrap();
 
         let mut column = None;
+        let mut custom_type = None;
         for attr in parse_attrs::<PatchFieldAttr>(&value.attrs)? {
             match attr {
                 PatchFieldAttr::Column(x) => set_once(&mut column, x)?,
+                PatchFieldAttr::CustomType(_) => set_once(&mut custom_type, true)?,
             }
         }
 
@@ -61,6 +63,7 @@ impl TryFrom<&syn::Field> for PatchField {
             ident: value.ident.clone().unwrap(),
             column: column.unwrap_or_else(|| ident.to_string()),
             ty: value.ty.clone(),
+            custom_type: custom_type.unwrap_or(false),
         })
     }
 }

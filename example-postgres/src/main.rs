@@ -39,13 +39,14 @@ async fn main() -> anyhow::Result<()> {
     new.email = "asdf".to_owned();
     new.update(&db).await?;
 
-    log::info!("apply a patch to the user, updating its first and last name");
+    log::info!("apply a patch to the user");
     new.patch(
         &db,
-        UpdateName {
+        UpdateUser {
             first_name: "NewFirstName".to_owned(),
             last_name: "NewLastName".to_owned(),
             disabled: Some("Reason".to_owned()),
+            role: Role::Admin,
         },
     )
     .await?;
@@ -87,10 +88,12 @@ struct User {
 // Patches can be used to update multiple fields at once (in diesel, they're called "ChangeSets").
 #[derive(ormx::Patch)]
 #[ormx(table_name = "users", table = crate::User, id = "id")]
-struct UpdateName {
+struct UpdateUser {
     first_name: String,
     last_name: String,
     disabled: Option<String>,
+    #[ormx(custom_type)]
+    role: Role,
 }
 
 #[derive(Debug, Copy, Clone, sqlx::Type)]

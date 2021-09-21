@@ -19,6 +19,7 @@ pub struct PatchField {
     pub ident: Ident,
     pub column: String,
     pub ty: Type,
+    pub custom_type: bool
 }
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
