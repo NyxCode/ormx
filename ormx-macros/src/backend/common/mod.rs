@@ -3,13 +3,14 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Ident, Type, Visibility};
-
 pub use table::*;
 
-use crate::attrs::Insertable;
-use crate::backend::Backend;
-use crate::patch::Patch;
-use crate::table::Table;
+use crate::{
+    attrs::Insertable,
+    backend::Backend,
+    patch::{Patch, PatchField},
+    table::Table,
+};
 
 mod table;
 
@@ -108,13 +109,21 @@ pub fn setters<B: Backend>(table: &Table<B>) -> TokenStream {
                 table.id.column(),
                 bindings.next().unwrap(),
             );
+
+            let mut value = quote!(value);
+            if field.custom_type {
+                value = quote!(#value as #field_ty)
+            }
+            if field.by_ref {
+                value = quote!(&(#value));
+            }
             setters.extend(quote! {
                 #vis async fn #fn_name(
                     &mut self,
                     db: impl sqlx::Executor<'_, Database = ormx::Db>,
                     value: #field_ty
                 ) -> sqlx::Result<()> {
-                    sqlx::query!(#sql, value, <Self as ormx::Table>::id(self))
+                    sqlx::query!(#sql, #value, <Self as ormx::Table>::id(self))
                         .execute(db)
                         .await?;
                     self.#field_ident = value;
@@ -143,14 +152,7 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
     let query_args = &patch
         .fields
         .iter()
-        .map(|field| {
-            let field_ident = &field.ident;
-            let field_ty = &field.ty;
-            match field.custom_type {
-                false => quote!(#field_ident),
-                true => quote!(#field_ident as #field_ty)
-            }
-        })
+        .map(PatchField::fmt_as_argument)
         .collect::<Vec<TokenStream>>();
 
     let mut bindings = B::Bindings::default();

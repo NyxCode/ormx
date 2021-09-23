@@ -2,8 +2,7 @@ use std::borrow::Cow;
 
 use proc_macro2::TokenStream;
 
-use crate::backend::Backend;
-use crate::table::Table;
+use crate::{backend::Backend, table::Table};
 
 mod insert;
 

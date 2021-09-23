@@ -103,3 +103,11 @@ enum Role {
     User,
     Admin,
 }
+
+#[derive(Debug, ormx::Table)]
+#[ormx(table = "test", id = id, insertable)]
+struct Test {
+    id: i32,
+    #[ormx(by_ref)]
+    rows: Vec<String>,
+}

@@ -2,8 +2,7 @@ use std::borrow::Cow;
 
 use proc_macro2::TokenStream;
 
-use crate::patch::Patch;
-use crate::table::Table;
+use crate::{patch::Patch, table::Table};
 
 mod common;
 #[cfg(feature = "mysql")]

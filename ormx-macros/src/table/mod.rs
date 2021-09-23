@@ -1,14 +1,14 @@
-use std::convert::TryFrom;
+use std::{borrow::Cow, convert::TryFrom, marker::PhantomData};
 
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use syn::{DeriveInput, Result, Type, Visibility};
 
-use crate::attrs::{Getter, Insertable};
-use crate::backend::{Backend, Implementation};
-use std::borrow::Cow;
-use std::marker::PhantomData;
+use crate::{
+    attrs::{Getter, Insertable},
+    backend::{Backend, Implementation},
+};
 
 mod parse;
 
@@ -33,6 +33,7 @@ pub struct TableField<B: Backend> {
     pub get_optional: Option<Getter>,
     pub get_many: Option<Getter>,
     pub set: Option<Ident>,
+    pub by_ref: bool,
     pub _phantom: PhantomData<*const B>,
 }
 
@@ -73,6 +74,21 @@ impl<B: Backend> TableField<B> {
         } else {
             format!("{} AS {}", self.column(), self.field)
         }
+    }
+
+    pub fn fmt_as_argument(&self) -> TokenStream {
+        let ident = &self.field;
+        let ty = &self.ty;
+
+        let mut out = quote!(self.#ident);
+        if self.by_ref {
+            out = quote!(&#out);
+        }
+        if self.custom_type {
+            out = quote!(#out as #ty);
+        }
+
+        out
     }
 
     pub fn column(&self) -> Cow<str> {

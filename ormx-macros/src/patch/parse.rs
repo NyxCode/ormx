@@ -2,11 +2,12 @@ use std::convert::TryFrom;
 
 use syn::{Data, DeriveInput, Error, Field, Result};
 
-use crate::attrs::{parse_attrs, PatchAttr, PatchFieldAttr};
-use crate::patch::PatchField;
-use crate::utils::{missing_attr, set_once};
-
 use super::Patch;
+use crate::{
+    attrs::{parse_attrs, PatchAttr, PatchFieldAttr},
+    patch::PatchField,
+    utils::{missing_attr, set_once},
+};
 
 impl TryFrom<&syn::DeriveInput> for Patch {
     type Error = Error;
@@ -52,10 +53,12 @@ impl TryFrom<&syn::Field> for PatchField {
 
         let mut column = None;
         let mut custom_type = None;
+        let mut by_ref = None;
         for attr in parse_attrs::<PatchFieldAttr>(&value.attrs)? {
             match attr {
                 PatchFieldAttr::Column(x) => set_once(&mut column, x)?,
                 PatchFieldAttr::CustomType(_) => set_once(&mut custom_type, true)?,
+                PatchFieldAttr::ByRef(_) => set_once(&mut by_ref, true)?,
             }
         }
 
@@ -64,6 +67,7 @@ impl TryFrom<&syn::Field> for PatchField {
             column: column.unwrap_or_else(|| ident.to_string()),
             ty: value.ty.clone(),
             custom_type: custom_type.unwrap_or(false),
+            by_ref: by_ref.unwrap_or(false),
         })
     }
 }

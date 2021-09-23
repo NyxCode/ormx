@@ -3,8 +3,10 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::Ident;
 
-use crate::backend::postgres::{PgBackend, PgBindings};
-use crate::table::{Table, TableField};
+use crate::{
+    backend::postgres::{PgBackend, PgBindings},
+    table::{Table, TableField},
+};
 
 fn insert_sql(table: &Table<PgBackend>, insert_fields: &[&TableField<PgBackend>]) -> String {
     let columns = insert_fields.iter().map(|field| field.column()).join(", ");
@@ -50,14 +52,7 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
 
     let insert_field_exprs = insert_fields
         .iter()
-        .map(|field| {
-            let ident = &field.field;
-            let ty = &field.ty;
-            match field.custom_type {
-                true => quote!(self.#ident as #ty),
-                false => quote!(self.#ident),
-            }
-        })
+        .map(|f| f.fmt_as_argument())
         .collect::<Vec<TokenStream>>();
 
     let fetch_funtion = if default_fields.is_empty() {

@@ -1,6 +1,8 @@
-use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{Attribute, Ident, Path, Result, Token, Type};
+use syn::{
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    Attribute, Ident, Path, Result, Token, Type,
+};
 
 pub enum TableAttr {
     // table = <string>
@@ -31,6 +33,8 @@ pub enum TableFieldAttr {
     GetMany(Getter),
     // set [= <ident>]?
     Set(Option<Ident>),
+    // by_ref
+    ByRef(()),
 }
 
 #[derive(Clone)]
@@ -49,7 +53,8 @@ pub enum PatchAttr {
 pub enum PatchFieldAttr {
     // column = <string>
     Column(String),
-    CustomType(())
+    CustomType(()),
+    ByRef(()),
 }
 
 impl Parse for Getter {
@@ -144,7 +149,8 @@ impl_parse!(TableFieldAttr {
     "get_many" => GetMany(Getter),
     "set" => Set((= Ident)?),
     "custom_type" => CustomType(),
-    "default" => Default()
+    "default" => Default(),
+    "by_ref" => ByRef()
 });
 
 impl_parse!(PatchAttr {
@@ -155,5 +161,6 @@ impl_parse!(PatchAttr {
 
 impl_parse!(PatchFieldAttr {
     "column" => Column(= String),
-    "custom_type" => CustomType()
+    "custom_type" => CustomType(),
+    "by_ref" => ByRef()
 });

@@ -1,14 +1,14 @@
-use std::convert::TryFrom;
+use std::{convert::TryFrom, marker::PhantomData};
 
 use proc_macro2::Span;
 use syn::{Data, DeriveInput, Error, Ident, Result};
 
-use crate::attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr};
-use crate::utils::{missing_attr, set_once};
-
 use super::{Table, TableField};
-use crate::backend::Backend;
-use std::marker::PhantomData;
+use crate::{
+    attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr},
+    backend::Backend,
+    utils::{missing_attr, set_once},
+};
 
 macro_rules! none {
     ($($i:ident),*) => { $( let mut $i = None; )* };
@@ -35,7 +35,8 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             get_optional,
             get_many,
             set,
-            default
+            default,
+            by_ref
         );
 
         for attr in parse_attrs::<TableFieldAttr>(&value.attrs)? {
@@ -50,6 +51,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
                     set_once(&mut set, s.unwrap_or_else(default))?
                 }
                 TableFieldAttr::Default(..) => set_once(&mut default, true)?,
+                TableFieldAttr::ByRef(..) => set_once(&mut by_ref, true)?,
             }
         }
         Ok(TableField {
@@ -63,6 +65,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             get_optional,
             get_many,
             set,
+            by_ref: by_ref.unwrap_or(false),
             _phantom: PhantomData,
         })
     }
