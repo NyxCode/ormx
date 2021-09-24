@@ -11,6 +11,8 @@ pub enum TableAttr {
     Id(Ident),
     // insertable [= [<attribute>]* <ident>]?
     Insertable(Option<Insertable>),
+    // deletable
+    Deletable(())
 }
 
 pub struct Insertable {
@@ -139,7 +141,8 @@ macro_rules! impl_parse {
 impl_parse!(TableAttr {
     "table" => Table(= String),
     "id" => Id(= Ident),
-    "insertable" => Insertable((= Insertable)?)
+    "insertable" => Insertable((= Insertable)?),
+    "deletable" => Deletable()
 });
 
 impl_parse!(TableFieldAttr {

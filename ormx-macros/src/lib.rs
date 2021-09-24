@@ -48,6 +48,10 @@ mod utils;
 /// The generated struct can be used by [Table::insert](trait.Table.html) or
 /// [Insert::insert](trait.Insert.html).
 ///
+/// # Deletable
+/// ormx will implement [Delete](trait.Delete.html) for your struct when using
+/// `#[ormx(deletable)].
+///
 /// # Accessors: Getters
 /// ormx will generate accessor functions for fields annotated with `#[ormx(get_one)]`,
 /// `#[ormx(get_optional)]` and `#[ormx(get_many)]`.

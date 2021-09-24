@@ -86,7 +86,7 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
             .map(TableField::try_from)
             .collect::<Result<Vec<_>>>()?;
 
-        none!(table, id, insertable);
+        none!(table, id, insertable, deletable);
         for attr in parse_attrs::<TableAttr>(&value.attrs)? {
             match attr {
                 TableAttr::Table(x) => set_once(&mut table, x)?,
@@ -98,6 +98,7 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
                     };
                     set_once(&mut insertable, x.unwrap_or_else(default))?;
                 }
+                TableAttr::Deletable(_) => set_once(&mut deletable, true)?,
             }
         }
 
@@ -127,6 +128,7 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
             id,
             insertable,
             fields,
+            deletable: deletable.unwrap_or(false)
         })
     }
 }

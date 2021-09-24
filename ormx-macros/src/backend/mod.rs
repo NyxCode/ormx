@@ -39,6 +39,11 @@ pub trait Backend: Sized + Clone {
         common::impl_table::<Self>(table)
     }
 
+    /// Generate an `impl Delete for <Table>` block
+    fn impl_delete(table: &Table<Self>) -> TokenStream {
+        common::impl_delete::<Self>(table)
+    }
+
     /// Implement [Insert] for the helper struct for inserting
     fn impl_insert(table: &Table<Self>) -> TokenStream;
 

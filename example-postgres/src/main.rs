@@ -1,6 +1,6 @@
 // #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
-use ormx::{Insert, Table};
+use ormx::{Insert, Table, Delete};
 use sqlx::PgPool;
 
 // trace_macros!(true);
@@ -65,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[derive(Debug, ormx::Table)]
-#[ormx(table = "users", id = user_id, insertable)]
+#[ormx(table = "users", id = user_id, insertable, deletable)]
 struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]

@@ -19,6 +19,7 @@ pub struct Table<B: Backend> {
     pub id: TableField<B>,
     pub fields: Vec<TableField<B>>,
     pub insertable: Option<Insertable>,
+    pub deletable: bool
 }
 
 #[derive(Clone)]
@@ -118,6 +119,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let parsed = Table::try_from(&input)?;
 
     let impl_table = Implementation::impl_table(&parsed);
+    let delete = Implementation::impl_delete(&parsed);
     let insert_struct = Implementation::insert_struct(&parsed);
     let impl_insert = Implementation::impl_insert(&parsed);
     let getters = Implementation::impl_getters(&parsed);
@@ -125,6 +127,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         #impl_table
+        #delete
         #insert_struct
         #impl_insert
         #getters
