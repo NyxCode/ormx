@@ -38,6 +38,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             default,
             by_ref
         );
+        let mut insert_attrs = vec![];
 
         for attr in parse_attrs::<TableFieldAttr>(&value.attrs)? {
             match attr {
@@ -52,6 +53,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
                 }
                 TableFieldAttr::Default(..) => set_once(&mut default, true)?,
                 TableFieldAttr::ByRef(..) => set_once(&mut by_ref, true)?,
+                TableFieldAttr::InsertAttr(mut attr) => insert_attrs.append(&mut attr.0),
             }
         }
         Ok(TableField {
@@ -66,6 +68,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             get_many,
             set,
             by_ref: by_ref.unwrap_or(false),
+            insert_attrs,
             _phantom: PhantomData,
         })
     }

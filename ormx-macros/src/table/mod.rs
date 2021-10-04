@@ -3,7 +3,7 @@ use std::{borrow::Cow, convert::TryFrom, marker::PhantomData};
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use syn::{DeriveInput, Result, Type, Visibility};
+use syn::{DeriveInput, Result, Type, Visibility, Attribute};
 
 use crate::{
     attrs::{Getter, Insertable},
@@ -35,6 +35,7 @@ pub struct TableField<B: Backend> {
     pub get_many: Option<Getter>,
     pub set: Option<Ident>,
     pub by_ref: bool,
+    pub insert_attrs: Vec<Attribute>,
     pub _phantom: PhantomData<*const B>,
 }
 

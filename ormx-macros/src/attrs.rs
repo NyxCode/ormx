@@ -37,6 +37,8 @@ pub enum TableFieldAttr {
     Set(Option<Ident>),
     // by_ref
     ByRef(()),
+    // insert_attribute = <attribute>
+    InsertAttr(AnyAttribute)
 }
 
 #[derive(Clone)]
@@ -153,7 +155,8 @@ impl_parse!(TableFieldAttr {
     "set" => Set((= Ident)?),
     "custom_type" => CustomType(),
     "default" => Default(),
-    "by_ref" => ByRef()
+    "by_ref" => ByRef(),
+    "insert_attribute" => InsertAttr(= AnyAttribute)
 });
 
 impl_parse!(PatchAttr {
@@ -167,3 +170,10 @@ impl_parse!(PatchFieldAttr {
     "custom_type" => CustomType(),
     "by_ref" => ByRef()
 });
+
+pub struct AnyAttribute(pub Vec<Attribute>);
+impl syn::parse::Parse for AnyAttribute {
+    fn parse(input: ParseStream) -> Result<Self> {
+        input.call(Attribute::parse_outer).map(Self)
+    }
+}

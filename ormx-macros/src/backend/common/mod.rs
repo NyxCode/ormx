@@ -205,7 +205,8 @@ pub(crate) fn insert_struct<B: Backend>(table: &Table<B>) -> TokenStream {
     let insert_fields = table.insertable_fields().map(|field| {
         let ident = &field.field;
         let ty = &field.ty;
-        quote!(#vis #ident: #ty)
+        let attrs = &field.insert_attrs;
+        quote!(#(#attrs)* #vis #ident: #ty)
     });
 
     let from_impl = impl_from_for_insert_struct(table, ident);
