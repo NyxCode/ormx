@@ -41,7 +41,7 @@ pub mod exports {
     pub use crate::query2::map::*;
 }
 
-#[cfg(any(feature = "mysql", feature = "postgres"))]
+#[cfg(any(feature = "mysql", feature = "postgres", feature = "sqlite"))]
 mod query2;
 
 #[cfg(feature = "mysql")]

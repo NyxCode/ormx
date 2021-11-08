@@ -5,6 +5,8 @@ pub mod map;
 mod mysql;
 #[cfg(feature = "postgres")]
 mod postgres;
+#[cfg(feature = "sqlite")]
+mod sqlite;
 
 /// An improved version of `sqlx::query_as!`.
 ///
