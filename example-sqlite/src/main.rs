@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     .await?;
 
     log::info!("update a single field");
-    new.set_last_login(&db, Some(Utc::now().naive_utc().timestamp()))
+    new.set_last_login(&db, Utc::now().naive_utc().timestamp())
         .await?;
 
     log::info!("update all fields at once");
@@ -79,7 +79,7 @@ struct User {
     // don't include this field into `InsertUser` since it has a default value
     // generate `User::set_last_login(Option<NaiveDateTime>) -> Result<()>`
     #[ormx(default, set)]
-    last_login: Option<i64>,
+    last_login: i64,
 }
 
 // Patches can be used to update multiple fields at once (in diesel, they're called "ChangeSets").
