@@ -6,7 +6,7 @@ CREATE TABLE users
     email      TEXT NOT NULL UNIQUE,
     role       TEXT CHECK( role in ('user','admin') ) NOT NULL DEFAULT 'user',
     disabled   TEXT,
-    last_login INTEGER
+    last_login INTEGER DEFAULT 0
 );
 
 CREATE TABLE test (
