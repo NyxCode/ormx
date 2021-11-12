@@ -71,33 +71,28 @@ where
     }
 
     /// Queries the row of the given id.
-    fn get<'a, 'c: 'a>(
-        db: impl Executor<'c, Database = Db> + 'a,
-        id: Self::Id,
-    ) -> BoxFuture<'a, Result<Self>>;
+    fn get<'a, 'c: 'a, E>(db: E, id: Self::Id) -> BoxFuture<'a, Result<Self>>
+    where
+        E: Executor<'c, Database = Db> + 'a;
 
     /// Stream all rows from this table.
-    fn stream_all<'a, 'c: 'a>(
-        db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxStream<'a, Result<Self>>;
+    fn stream_all<'a>(db: &'a sqlx::Pool<Db>) -> BoxStream<'a, Result<Self>>;
 
-    fn stream_all_paginated<'a, 'c: 'a>(
-        db: impl Executor<'c, Database = Db> + 'a,
+    fn stream_all_paginated<'a>(
+        db: &'a sqlx::Pool<Db>,
         offset: i64,
         limit: i64,
     ) -> BoxStream<'a, Result<Self>>;
 
     /// Load all rows from this table.
-    fn all<'a, 'c: 'a>(
-        db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<Vec<Self>>> {
+    fn all<'a>(db: &'a sqlx::Pool<Db>) -> BoxFuture<'a, Result<Vec<Self>>> {
         use futures::TryStreamExt;
 
         Box::pin(Self::stream_all(db).try_collect())
     }
 
-    fn all_paginated<'a, 'c: 'a>(
-        db: impl Executor<'c, Database = Db> + 'a,
+    fn all_paginated<'a>(
+        db: &'a sqlx::Pool<Db>,
         offset: i64,
         limit: i64,
     ) -> BoxFuture<'a, Result<Vec<Self>>> {
@@ -105,14 +100,12 @@ where
 
         Box::pin(Self::stream_all_paginated(db, offset, limit).try_collect())
     }
+
     /// Applies a patch to this row.
-    fn patch<'a, 'c: 'a, P>(
-        &'a mut self,
-        db: impl Executor<'c, Database = Db> + 'a,
-        patch: P,
-    ) -> BoxFuture<'a, Result<()>>
+    fn patch<'a, 'c: 'a, P, E>(&'a mut self, db: E, patch: P) -> BoxFuture<'a, Result<()>>
     where
         P: Patch<Table = Self>,
+        E: sqlx::Executor<'c, Database = Db> + 'a,
     {
         Box::pin(async move {
             let patch: P = patch;
@@ -123,16 +116,15 @@ where
     }
 
     /// Updates all fields of this row, regardless if they have been changed or not.
-    fn update<'a, 'c: 'a>(
-        &'a self,
-        db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>>;
+    fn update<'a, 'c: 'a, E>(&'a self, db: E) -> BoxFuture<'a, Result<()>>
+    where
+        E: sqlx::Executor<'c, Database = Db> + 'a;
 
     // Refresh this row, querying all columns from the database.
-    fn reload<'a, 'c: 'a>(
-        &'a mut self,
-        db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>> {
+    fn reload<'a, 'c: 'a, E>(&'a mut self, db: E) -> BoxFuture<'a, Result<()>>
+    where
+        E: sqlx::Executor<'c, Database = Db> + 'a,
+    {
         Box::pin(async move {
             *self = Self::get(db, self.id()).await?;
             Ok(())
@@ -145,24 +137,23 @@ where
     Self: Table + Sized + Send + Sync + 'static,
 {
     /// Delete a row from the database
-    fn delete_row<'a, 'c: 'a>(
-        db: impl Executor<'c, Database = Db> + 'a,
-        id: Self::Id,
-    ) -> BoxFuture<'a, Result<()>>;
+    fn delete_row<'a, 'c: 'a, E>(db: E, id: Self::Id) -> BoxFuture<'a, Result<()>>
+    where
+        E: sqlx::Executor<'c, Database = Db> + 'a;
 
     /// Deletes this row from the database
-    fn delete<'a, 'c: 'a>(
-        self,
-        db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>> {
+    fn delete<'a, 'c: 'a, E>(self, db: E) -> BoxFuture<'a, Result<()>>
+    where
+        E: sqlx::Executor<'c, Database = Db> + 'a,
+    {
         Self::delete_row(db, self.id())
     }
 
     /// Deletes this row from the database
-    fn delete_ref<'a, 'c: 'a>(
-        &self,
-        db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>> {
+    fn delete_ref<'a, 'c: 'a, E>(&self, db: E) -> BoxFuture<'a, Result<()>>
+    where
+        E: sqlx::Executor<'c, Database = Db> + 'a,
+    {
         Self::delete_row(db, self.id())
     }
 }
@@ -179,11 +170,13 @@ where
     fn apply_to(self, entity: &mut Self::Table);
 
     /// Applies this patch to a row in the database.
-    fn patch_row<'a, 'c: 'a>(
+    fn patch_row<'a, 'c: 'a, E>(
         &'a self,
-        db: impl Executor<'c, Database = Db> + 'a,
+        db: E,
         id: <Self::Table as Table>::Id,
-    ) -> BoxFuture<'a, Result<()>>;
+    ) -> BoxFuture<'a, Result<()>>
+    where
+        E: sqlx::Executor<'c, Database = Db> + 'a;
 }
 
 /// A type which can be inserted as a row into the database.
@@ -195,4 +188,47 @@ where
 
     /// Insert a row into the database, returning the inserted row.
     fn insert(self, db: &mut <Db as Database>::Connection) -> BoxFuture<Result<Self::Table>>;
+}
+
+#[ouroboros::self_referencing]
+pub struct SelfRefStream<Args, Item>
+where
+    Args: 'static,
+{
+    args: Args,
+    #[borrows(args)]
+    #[covariant] // Box is covariant.
+    inner: BoxStream<'this, Result<Item>>,
+}
+
+impl<Args, Item> SelfRefStream<Args, Item>
+where
+    Args: 'static,
+{
+    #[inline]
+    pub fn build(
+        args: Args,
+        inner_builder: impl for<'this> FnOnce(&'this Args) -> BoxStream<'this, Result<Item>>,
+    ) -> Self {
+        SelfRefStreamBuilder {
+            args,
+            inner_builder,
+        }
+        .build()
+    }
+}
+
+impl<Args, Item> futures::Stream for SelfRefStream<Args, Item>
+where
+    Args: 'static,
+{
+    type Item = Result<Item>;
+
+    #[inline]
+    fn poll_next(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut futures::task::Context<'_>,
+    ) -> futures::task::Poll<Option<Self::Item>> {
+        self.with_inner_mut(|s| s.as_mut().poll_next(cx))
+    }
 }

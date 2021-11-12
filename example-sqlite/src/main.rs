@@ -1,6 +1,12 @@
 // #![feature(trace_macros)]
 use chrono::Utc;
-use ormx::{Delete, Insert, Table};
+use ormx::{
+    Delete,
+    Insert,
+    Table,
+    Db,
+};
+
 use sqlx::SqlitePool;
 
 // trace_macros!(true);
@@ -15,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
         .init()?;
 
     let db = SqlitePool::connect(&dotenv::var("DATABASE_URL")?).await?;
-
+    let mut conn = db.acquire().await?;
     log::info!("insert a new row into the database");
     let mut new = InsertUser {
         user_id: 1,
@@ -25,8 +31,12 @@ async fn main() -> anyhow::Result<()> {
         disabled: None,
         role: Role::User,
     }
-    .insert(&mut *db.acquire().await?)
+    .insert(&mut conn)
     .await?;
+
+    new.reload(&mut conn).await?;
+    log::info!("reloaded user: {:?}", new);
+    new.reload(&db).await?;
 
     log::info!("update a single field");
     new.set_last_login(&db, Utc::now().naive_utc().timestamp())
@@ -99,12 +109,4 @@ struct UpdateUser {
 enum Role {
     User,
     Admin,
-}
-
-#[derive(Debug, ormx::Table)]
-#[ormx(table = "test", id = id, insertable)]
-struct Test {
-    id: i64,
-    #[ormx(by_ref)]
-    rowdata: Vec<String>,
 }

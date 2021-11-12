@@ -80,14 +80,16 @@ impl<B: Backend> TableField<B> {
 
     pub fn fmt_as_argument(&self) -> TokenStream {
         let ident = &self.field;
-        let ty = &self.ty;
 
         let mut out = quote!(self.#ident);
         if self.by_ref {
             out = quote!(&#out);
         }
         if self.custom_type {
-            out = quote!(#out as #ty);
+            // let ty = &self.ty;
+            // note: removed 'as #ty' to avoid creating a temporary
+            // that is dropped before the stream is finished.
+            out = quote!(#out);
         }
 
         out

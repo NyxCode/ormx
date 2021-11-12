@@ -54,10 +54,10 @@ pub(crate) fn getters<B: Backend>(table: &Table<B>) -> TokenStream {
 
 pub fn get_one(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
     quote! {
-        #vis async fn #ident(
-            db: impl sqlx::Executor<'_, Database = ormx::Db>,
-            by: #by_ty,
-        ) -> sqlx::Result<Self> {
+        #vis async fn #ident<'a, 'c: 'a, E>(db: E, by: #by_ty) -> sqlx::Result<Self>
+        where
+            E: sqlx::Executor<'c, Database = ormx::Db> + 'a,
+        {
             sqlx::query_as!(Self, #sql, by)
                 .fetch_one(db)
                 .await
@@ -67,10 +67,10 @@ pub fn get_one(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> Toke
 
 pub fn get_optional(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
     quote! {
-        #vis async fn #ident(
-            db: impl sqlx::Executor<'_, Database = ormx::Db>,
-            by: #by_ty,
-        ) -> sqlx::Result<Option<Self>> {
+        #vis async fn #ident<'a, 'c: 'a, E>(db: E, by: #by_ty) -> sqlx::Result<Option<Self>>
+        where
+            E: sqlx::Executor<'c, Database = ormx::Db> + 'a,
+        {
             sqlx::query_as!(Self, #sql, by)
                 .fetch_optional(db)
                 .await
@@ -80,10 +80,10 @@ pub fn get_optional(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) ->
 
 pub fn get_many(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> TokenStream {
     quote! {
-        #vis async fn #ident(
-            db: impl sqlx::Executor<'_, Database = ormx::Db>,
-            by: #by_ty,
-        ) -> sqlx::Result<Vec<Self>> {
+        #vis async fn #ident<'a, 'c: 'a, E>(db: E, by: #by_ty) -> sqlx::Result<Vec<Self>>
+        where
+            E: sqlx::Executor<'c, Database = ormx::Db> + 'a,
+        {
             sqlx::query_as!(Self, #sql, by)
                 .fetch_all(db)
                 .await
@@ -118,12 +118,12 @@ pub fn setters<B: Backend>(table: &Table<B>) -> TokenStream {
                 value = quote!(&(#value));
             }
             setters.extend(quote! {
-                #vis async fn #fn_name(
-                    &mut self,
-                    db: impl sqlx::Executor<'_, Database = ormx::Db>,
-                    value: #field_ty
-                ) -> sqlx::Result<()> {
-                    sqlx::query!(#sql, #value, <Self as ormx::Table>::id(self))
+                #vis async fn #fn_name<'a, 'c: 'a, E>(&mut self, db: E, value: #field_ty) -> sqlx::Result<()>
+                where
+                    E: sqlx::Executor<'c, Database = ormx::Db> + 'a,
+                {
+                    let id = <Self as ormx::Table>::id(self);
+                    sqlx::query!(#sql, #value, id)
                         .execute(db)
                         .await?;
                     self.#field_ident = value;
@@ -180,11 +180,14 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
                 #( entity.#field_idents = self.#field_idents; )*
             }
 
-            fn patch_row<'a, 'c: 'a>(
+            fn patch_row<'a, 'c: 'a, E>(
                 &'a self,
-                db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
+                db: E,
                 id: <Self::Table as ormx::Table>::Id,
-            ) -> #box_future<'a, sqlx::Result<()>> {
+            ) -> #box_future<'a, sqlx::Result<()>>
+            where
+                E: sqlx::Executor<'c, Database = ormx::Db> + 'a,
+            {
                 Box::pin(async move {
                     sqlx::query!(#sql, #( self.#query_args, )* id)
                         .execute(db)
