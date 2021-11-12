@@ -1,5 +1,6 @@
-use crate::User;
 use sqlx::PgPool;
+
+use crate::User;
 
 pub(crate) async fn query_users(
     db: &PgPool,

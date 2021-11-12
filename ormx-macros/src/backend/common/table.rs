@@ -1,8 +1,10 @@
 use proc_macro2::TokenStream;
-use quote::{quote, TokenStreamExt};
+use quote::quote;
 
-use crate::backend::Backend;
-use crate::table::Table;
+use crate::{
+    backend::Backend,
+    table::{Table, TableField},
+};
 
 pub fn impl_table<B: Backend>(table: &Table<B>) -> TokenStream {
     let table_ident = &table.ident;
@@ -14,7 +16,6 @@ pub fn impl_table<B: Backend>(table: &Table<B>) -> TokenStream {
     let stream_all = stream_all(table, &column_list);
     let stream_all_paginated = stream_all_paginated::<B>(table, &column_list);
     let update = update::<B>(table);
-    let delete = delete::<B>(table);
 
     quote! {
         impl ormx::Table for #table_ident {
@@ -26,6 +27,20 @@ pub fn impl_table<B: Backend>(table: &Table<B>) -> TokenStream {
             #stream_all
             #stream_all_paginated
             #update
+        }
+    }
+}
+
+pub fn impl_delete<B: Backend>(table: &Table<B>) -> TokenStream {
+    if !table.deletable {
+        return quote!();
+    }
+
+    let table_ident = &table.ident;
+    let delete = delete::<B>(table);
+
+    quote! {
+        impl ormx::Delete for #table_ident {
             #delete
         }
     }
@@ -73,17 +88,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
         bindings.next().unwrap()
     );
     let id_argument = &table.id.field;
-    let other_arguments = table.fields_except_id().map(|field| {
-        let ident = &field.field;
-        let mut out = quote!(self.#ident);
-
-        if field.custom_type {
-            let ty = &field.ty;
-            out.append_all(quote!(as #ty))
-        }
-
-        out
-    });
+    let other_arguments = table.fields_except_id().map(TableField::fmt_as_argument);
 
     quote! {
         fn update<'a, 'c: 'a>(

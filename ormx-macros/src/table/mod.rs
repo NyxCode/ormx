@@ -1,14 +1,14 @@
-use std::convert::TryFrom;
+use std::{borrow::Cow, convert::TryFrom, marker::PhantomData};
 
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use syn::{DeriveInput, Result, Type, Visibility};
+use syn::{DeriveInput, Result, Type, Visibility, Attribute};
 
-use crate::attrs::{Getter, Insertable};
-use crate::backend::{Backend, Implementation};
-use std::borrow::Cow;
-use std::marker::PhantomData;
+use crate::{
+    attrs::{Getter, Insertable},
+    backend::{Backend, Implementation},
+};
 
 mod parse;
 
@@ -19,6 +19,7 @@ pub struct Table<B: Backend> {
     pub id: TableField<B>,
     pub fields: Vec<TableField<B>>,
     pub insertable: Option<Insertable>,
+    pub deletable: bool
 }
 
 #[derive(Clone)]
@@ -35,6 +36,8 @@ pub struct TableField<B: Backend> {
     #[cfg(feature = "postgres")]
     pub get_by_any: Option<Getter>,
     pub set: Option<Ident>,
+    pub by_ref: bool,
+    pub insert_attrs: Vec<Attribute>,
     pub _phantom: PhantomData<*const B>,
 }
 
@@ -77,6 +80,21 @@ impl<B: Backend> TableField<B> {
         }
     }
 
+    pub fn fmt_as_argument(&self) -> TokenStream {
+        let ident = &self.field;
+        let ty = &self.ty;
+
+        let mut out = quote!(self.#ident);
+        if self.by_ref {
+            out = quote!(&#out);
+        }
+        if self.custom_type {
+            out = quote!(#out as #ty);
+        }
+
+        out
+    }
+
     pub fn column(&self) -> Cow<str> {
         if self.reserved_ident {
             format!("{}{}{}", B::QUOTE, self.column_name, B::QUOTE).into()
@@ -107,6 +125,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let parsed = Table::try_from(&input)?;
 
     let impl_table = Implementation::impl_table(&parsed);
+    let delete = Implementation::impl_delete(&parsed);
     let insert_struct = Implementation::insert_struct(&parsed);
     let impl_insert = Implementation::impl_insert(&parsed);
     let getters = Implementation::impl_getters(&parsed);
@@ -114,6 +133,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         #impl_table
+        #delete
         #insert_struct
         #impl_insert
         #getters

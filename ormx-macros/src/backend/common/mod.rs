@@ -3,13 +3,14 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Ident, Type, Visibility};
-
 pub use table::*;
 
-use crate::attrs::Insertable;
-use crate::backend::Backend;
-use crate::patch::Patch;
-use crate::table::Table;
+use crate::{
+    attrs::Insertable,
+    backend::Backend,
+    patch::{Patch, PatchField},
+    table::Table,
+};
 
 mod table;
 
@@ -28,17 +29,17 @@ pub(crate) fn getters<B: Backend>(table: &Table<B>) -> TokenStream {
         );
 
         if let Some(getter) = &field.get_one {
-            let (func, arg) = getter.or_fallback(&field);
+            let (func, arg) = getter.or_fallback(field);
             getters.extend(get_one(vis, &func, &arg, &sql));
         }
 
         if let Some(getter) = &field.get_optional {
-            let (func, arg) = getter.or_fallback(&field);
+            let (func, arg) = getter.or_fallback(field);
             getters.extend(get_optional(vis, &func, &arg, &sql));
         }
 
         if let Some(getter) = &field.get_many {
-            let (func, arg) = getter.or_fallback(&field);
+            let (func, arg) = getter.or_fallback(field);
             getters.extend(get_many(vis, &func, &arg, &sql));
         }
     }
@@ -108,13 +109,21 @@ pub fn setters<B: Backend>(table: &Table<B>) -> TokenStream {
                 table.id.column(),
                 bindings.next().unwrap(),
             );
+
+            let mut value = quote!(value);
+            if field.custom_type {
+                value = quote!(#value as #field_ty)
+            }
+            if field.by_ref {
+                value = quote!(&(#value));
+            }
             setters.extend(quote! {
                 #vis async fn #fn_name(
                     &mut self,
                     db: impl sqlx::Executor<'_, Database = ormx::Db>,
                     value: #field_ty
                 ) -> sqlx::Result<()> {
-                    sqlx::query!(#sql, value, <Self as ormx::Table>::id(self))
+                    sqlx::query!(#sql, #value, <Self as ormx::Table>::id(self))
                         .execute(db)
                         .await?;
                     self.#field_ident = value;
@@ -140,6 +149,11 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
         .iter()
         .map(|field| &field.ident)
         .collect::<Vec<&Ident>>();
+    let query_args = &patch
+        .fields
+        .iter()
+        .map(PatchField::fmt_as_argument)
+        .collect::<Vec<TokenStream>>();
 
     let mut bindings = B::Bindings::default();
     let mut assignments = Vec::with_capacity(patch.fields.len());
@@ -172,7 +186,7 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
                 id: <Self::Table as ormx::Table>::Id,
             ) -> #box_future<'a, sqlx::Result<()>> {
                 Box::pin(async move {
-                    sqlx::query!(#sql, #( self.#field_idents, )* id)
+                    sqlx::query!(#sql, #( self.#query_args, )* id)
                         .execute(db)
                         .await?;
                     Ok(())
@@ -191,7 +205,8 @@ pub(crate) fn insert_struct<B: Backend>(table: &Table<B>) -> TokenStream {
     let insert_fields = table.insertable_fields().map(|field| {
         let ident = &field.field;
         let ty = &field.ty;
-        quote!(#vis #ident: #ty)
+        let attrs = &field.insert_attrs;
+        quote!(#(#attrs)* #vis #ident: #ty)
     });
 
     let from_impl = impl_from_for_insert_struct(table, ident);

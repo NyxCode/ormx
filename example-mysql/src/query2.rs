@@ -1,5 +1,6 @@
-use crate::User;
 use sqlx::MySqlPool;
+
+use crate::User;
 
 pub(crate) async fn query_users(
     db: &MySqlPool,

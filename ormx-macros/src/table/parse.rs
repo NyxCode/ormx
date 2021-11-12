@@ -1,14 +1,14 @@
-use std::convert::TryFrom;
+use std::{convert::TryFrom, marker::PhantomData};
 
 use proc_macro2::Span;
 use syn::{Data, DeriveInput, Error, Ident, Result};
 
-use crate::attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr};
-use crate::utils::{missing_attr, set_once};
-
 use super::{Table, TableField};
-use crate::backend::Backend;
-use std::marker::PhantomData;
+use crate::{
+    attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr},
+    backend::Backend,
+    utils::{missing_attr, set_once},
+};
 
 macro_rules! none {
     ($($i:ident),*) => { $( let mut $i = None; )* };
@@ -35,8 +35,10 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             get_optional,
             get_many,
             set,
-            default
+            default,
+            by_ref
         );
+        let mut insert_attrs = vec![];
 
         #[cfg(feature = "postgres")]
         none!(get_by_any);
@@ -55,6 +57,8 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
                     set_once(&mut set, s.unwrap_or_else(default))?
                 }
                 TableFieldAttr::Default(..) => set_once(&mut default, true)?,
+                TableFieldAttr::ByRef(..) => set_once(&mut by_ref, true)?,
+                TableFieldAttr::InsertAttr(mut attr) => insert_attrs.append(&mut attr.0),
             }
         }
         Ok(TableField {
@@ -70,6 +74,8 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             #[cfg(feature = "postgres")]
             get_by_any,
             set,
+            by_ref: by_ref.unwrap_or(false),
+            insert_attrs,
             _phantom: PhantomData,
         })
     }
@@ -90,7 +96,7 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
             .map(TableField::try_from)
             .collect::<Result<Vec<_>>>()?;
 
-        none!(table, id, insertable);
+        none!(table, id, insertable, deletable);
         for attr in parse_attrs::<TableAttr>(&value.attrs)? {
             match attr {
                 TableAttr::Table(x) => set_once(&mut table, x)?,
@@ -102,6 +108,7 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
                     };
                     set_once(&mut insertable, x.unwrap_or_else(default))?;
                 }
+                TableAttr::Deletable(_) => set_once(&mut deletable, true)?,
             }
         }
 
@@ -131,6 +138,7 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
             id,
             insertable,
             fields,
+            deletable: deletable.unwrap_or(false)
         })
     }
 }

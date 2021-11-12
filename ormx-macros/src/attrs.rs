@@ -1,6 +1,8 @@
-use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{Attribute, Ident, Path, Result, Token, Type};
+use syn::{
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    Attribute, Ident, Path, Result, Token, Type,
+};
 
 pub enum TableAttr {
     // table = <string>
@@ -9,6 +11,8 @@ pub enum TableAttr {
     Id(Ident),
     // insertable [= [<attribute>]* <ident>]?
     Insertable(Option<Insertable>),
+    // deletable
+    Deletable(())
 }
 
 pub struct Insertable {
@@ -34,6 +38,10 @@ pub enum TableFieldAttr {
     GetByAny(Getter),
     // set [= <ident>]?
     Set(Option<Ident>),
+    // by_ref
+    ByRef(()),
+    // insert_attribute = <attribute>
+    InsertAttr(AnyAttribute)
 }
 
 #[derive(Clone)]
@@ -52,6 +60,8 @@ pub enum PatchAttr {
 pub enum PatchFieldAttr {
     // column = <string>
     Column(String),
+    CustomType(()),
+    ByRef(()),
 }
 
 impl Parse for Getter {
@@ -138,7 +148,8 @@ macro_rules! impl_parse {
 impl_parse!(TableAttr {
     "table" => Table(= String),
     "id" => Id(= Ident),
-    "insertable" => Insertable((= Insertable)?)
+    "insertable" => Insertable((= Insertable)?),
+    "deletable" => Deletable()
 });
 
 impl_parse!(TableFieldAttr {
@@ -150,7 +161,9 @@ impl_parse!(TableFieldAttr {
     "get_by_any" => GetByAny(Getter),
     "set" => Set((= Ident)?),
     "custom_type" => CustomType(),
-    "default" => Default()
+    "default" => Default(),
+    "by_ref" => ByRef(),
+    "insert_attribute" => InsertAttr(= AnyAttribute)
 });
 
 impl_parse!(PatchAttr {
@@ -160,5 +173,14 @@ impl_parse!(PatchAttr {
 });
 
 impl_parse!(PatchFieldAttr {
-    "column" => Column(= String)
+    "column" => Column(= String),
+    "custom_type" => CustomType(),
+    "by_ref" => ByRef()
 });
+
+pub struct AnyAttribute(pub Vec<Attribute>);
+impl syn::parse::Parse for AnyAttribute {
+    fn parse(input: ParseStream) -> Result<Self> {
+        input.call(Attribute::parse_outer).map(Self)
+    }
+}

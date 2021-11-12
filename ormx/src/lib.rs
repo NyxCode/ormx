@@ -30,16 +30,15 @@
 //! # Documentation
 //! See the docs of [derive(Table)](derive.Table.html) and [Patch](trait.Patch.html).
 
-use futures::future::BoxFuture;
-use futures::stream::BoxStream;
-use sqlx::{Database, Executor, Result};
-
+use futures::{future::BoxFuture, stream::BoxStream};
 pub use ormx_macros::*;
+use sqlx::{Database, Executor, Result};
 
 #[doc(hidden)]
 pub mod exports {
-    pub use crate::query2::map::*;
     pub use futures;
+
+    pub use crate::query2::map::*;
 }
 
 #[cfg(any(feature = "mysql", feature = "postgres"))]
@@ -139,16 +138,29 @@ where
             Ok(())
         })
     }
+}
 
+pub trait Delete
+where
+    Self: Table + Sized + Send + Sync + 'static,
+{
     /// Delete a row from the database
     fn delete_row<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         id: Self::Id,
     ) -> BoxFuture<'a, Result<()>>;
 
-    /// Deletes this row from the database.
+    /// Deletes this row from the database
     fn delete<'a, 'c: 'a>(
         self,
+        db: impl Executor<'c, Database = Db> + 'a,
+    ) -> BoxFuture<'a, Result<()>> {
+        Self::delete_row(db, self.id())
+    }
+
+    /// Deletes this row from the database
+    fn delete_ref<'a, 'c: 'a>(
+        &self,
         db: impl Executor<'c, Database = Db> + 'a,
     ) -> BoxFuture<'a, Result<()>> {
         Self::delete_row(db, self.id())

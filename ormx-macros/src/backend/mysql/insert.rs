@@ -2,10 +2,11 @@ use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::table::{Table, TableField};
-
 use super::MySqlBackend;
-use crate::backend::mysql::MySqlBindings;
+use crate::{
+    backend::mysql::MySqlBindings,
+    table::{Table, TableField},
+};
 
 pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
     let insert_ident = match &table.insertable {

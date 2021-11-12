@@ -1,6 +1,6 @@
 // #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
-use ormx::{Insert, Table};
+use ormx::{Insert, Table, Delete};
 use sqlx::{PgConnection, PgPool};
 
 // trace_macros!(true);
@@ -40,13 +40,14 @@ async fn main() -> anyhow::Result<()> {
     new.email = "asdf".to_owned();
     new.update(&db).await?;
 
-    log::info!("apply a patch to the user, updating its first and last name");
+    log::info!("apply a patch to the user");
     new.patch(
         &db,
-        UpdateName {
+        UpdateUser {
             first_name: "NewFirstName".to_owned(),
             last_name: "NewLastName".to_owned(),
             disabled: Some("Reason".to_owned()),
+            role: Role::Admin,
         },
     )
     .await?;
@@ -90,7 +91,7 @@ async fn insert_dummy_user(conn: &mut PgConnection, id: i32) -> Result<User, sql
 }
 
 #[derive(Debug, ormx::Table)]
-#[ormx(table = "users", id = user_id, insertable)]
+#[ormx(table = "users", id = user_id, insertable, deletable)]
 struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]
@@ -114,10 +115,12 @@ struct User {
 // Patches can be used to update multiple fields at once (in diesel, they're called "ChangeSets").
 #[derive(ormx::Patch)]
 #[ormx(table_name = "users", table = crate::User, id = "id")]
-struct UpdateName {
+struct UpdateUser {
     first_name: String,
     last_name: String,
     disabled: Option<String>,
+    #[ormx(custom_type)]
+    role: Role,
 }
 
 #[derive(Debug, Copy, Clone, sqlx::Type)]
@@ -126,4 +129,12 @@ struct UpdateName {
 enum Role {
     User,
     Admin,
+}
+
+#[derive(Debug, ormx::Table)]
+#[ormx(table = "test", id = id, insertable)]
+struct Test {
+    id: i32,
+    #[ormx(by_ref)]
+    rows: Vec<String>,
 }

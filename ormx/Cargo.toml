@@ -1,6 +1,6 @@
 [package]
 name = "ormx"
-version = "0.7.0"
+version = "0.10.0"
 authors = ["Moritz Bischof"]
 edition = "2018"
 license = "MIT"
@@ -20,7 +20,7 @@ postgres = ["sqlx/postgres", "ormx-macros/postgres"]
 _docs-rs-build = ["sqlx/runtime-tokio-rustls", "postgres"]
 
 [dependencies]
-ormx-macros = { path = "../ormx-macros", version = "0.7" }
+ormx-macros = { path = "../ormx-macros", version = "0.10" }
 futures = "0.3"
 
 [dependencies.sqlx]

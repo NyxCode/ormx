@@ -2,8 +2,7 @@ use std::borrow::Cow;
 
 use proc_macro2::TokenStream;
 
-use crate::patch::Patch;
-use crate::table::Table;
+use crate::{patch::Patch, table::Table};
 
 mod common;
 #[cfg(feature = "mysql")]
@@ -38,6 +37,11 @@ pub trait Backend: Sized + Clone {
     /// Generate an `impl Table for <Table>` block
     fn impl_table(table: &Table<Self>) -> TokenStream {
         common::impl_table::<Self>(table)
+    }
+
+    /// Generate an `impl Delete for <Table>` block
+    fn impl_delete(table: &Table<Self>) -> TokenStream {
+        common::impl_delete::<Self>(table)
     }
 
     /// Implement [Insert] for the helper struct for inserting
