@@ -67,7 +67,7 @@ async fn main() -> anyhow::Result<()> {
     insert_dummy_user(&mut conn, 4).await?;
 
     log::info!("getting many users by any user id (using 'get_any' getter)");
-    let users = User::get_many_by_user_ids(&mut conn, &[2, 4]).await?;
+    let users = User::get_by_any_user_id(&mut conn, &[2, 4]).await?;
     dbg!(&users);
     assert_eq!(users.len(), 2);
 
@@ -95,7 +95,7 @@ struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]
     #[ormx(get_one = get_by_user_id)]
-    #[ormx(get_any = get_many_by_user_ids)]
+    #[ormx(get_by_any)]
     user_id: i32,
     first_name: String,
     last_name: String,

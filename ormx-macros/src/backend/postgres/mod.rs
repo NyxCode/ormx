@@ -5,11 +5,11 @@ use proc_macro2::TokenStream;
 use crate::backend::Backend;
 use crate::table::Table;
 
-use self::get_any::impl_get_any_getter;
+use self::get_by_any::impl_get_by_any_getter;
 
 use super::common;
 
-mod get_any;
+mod get_by_any;
 mod insert;
 
 #[derive(Clone)]
@@ -40,7 +40,7 @@ impl Backend for PgBackend {
 
     fn impl_getters(table: &Table<Self>) -> TokenStream {
         let mut getters = common::getters::<Self>(table);
-        getters.extend(impl_get_any_getter(table));
+        getters.extend(impl_get_by_any_getter(table));
         getters
     }
 }

@@ -33,7 +33,7 @@ pub struct TableField<B: Backend> {
     pub get_optional: Option<Getter>,
     pub get_many: Option<Getter>,
     #[cfg(feature = "postgres")]
-    pub get_any: Option<Getter>,
+    pub get_by_any: Option<Getter>,
     pub set: Option<Ident>,
     pub _phantom: PhantomData<*const B>,
 }
@@ -88,7 +88,7 @@ impl<B: Backend> TableField<B> {
 
 impl Getter {
     pub fn or_fallback<B: Backend>(&self, field: &TableField<B>) -> (Ident, Type) {
-        let ident = self.ident_or_fallback(field);
+        let ident = self.ident_or(field, &format!("by_{}", field.field));
         let arg = self.arg_ty.clone().unwrap_or_else(|| {
             let ty = &field.ty;
             syn::parse2(quote!(&#ty)).unwrap()
@@ -96,10 +96,10 @@ impl Getter {
         (ident, arg)
     }
 
-    pub fn ident_or_fallback<B: Backend>(&self, field: &TableField<B>) -> Ident {
+    pub fn ident_or<B: Backend>(&self, field: &TableField<B>, ident: &str) -> Ident {
         self.func
             .clone()
-            .unwrap_or_else(|| Ident::new(&format!("by_{}", field.field), Span::call_site()))
+            .unwrap_or_else(|| Ident::new(ident, Span::call_site()))
     }
 }
 

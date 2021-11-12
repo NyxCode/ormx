@@ -29,9 +29,9 @@ pub enum TableFieldAttr {
     GetOptional(Getter),
     // get_many [= <ident>]? [(<type>)]?
     GetMany(Getter),
-    // get_many [= <ident>]? [(<type>)]?
+    // get_by_any [= <ident>]? [(<type>)]?
     #[cfg(feature = "postgres")]
-    GetAny(Getter),
+    GetByAny(Getter),
     // set [= <ident>]?
     Set(Option<Ident>),
 }
@@ -147,7 +147,7 @@ impl_parse!(TableFieldAttr {
     "get_optional" => GetOptional(Getter),
     "get_many" => GetMany(Getter),
     #[cfg(feature = "postgres")]
-    "get_any" => GetAny(Getter),
+    "get_by_any" => GetByAny(Getter),
     "set" => Set((= Ident)?),
     "custom_type" => CustomType(),
     "default" => Default()

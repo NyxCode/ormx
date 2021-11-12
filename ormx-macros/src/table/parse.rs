@@ -39,7 +39,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
         );
 
         #[cfg(feature = "postgres")]
-        none!(get_any);
+        none!(get_by_any);
 
         for attr in parse_attrs::<TableFieldAttr>(&value.attrs)? {
             match attr {
@@ -49,7 +49,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
                 TableFieldAttr::GetOptional(g) => set_once(&mut get_optional, g)?,
                 TableFieldAttr::GetMany(g) => set_once(&mut get_many, g)?,
                 #[cfg(feature = "postgres")]
-                TableFieldAttr::GetAny(g) => set_once(&mut get_any, g)?,
+                TableFieldAttr::GetByAny(g) => set_once(&mut get_by_any, g)?,
                 TableFieldAttr::Set(s) => {
                     let default = || Ident::new(&format!("set_{}", ident), Span::call_site());
                     set_once(&mut set, s.unwrap_or_else(default))?
@@ -68,7 +68,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             get_optional,
             get_many,
             #[cfg(feature = "postgres")]
-            get_any,
+            get_by_any,
             set,
             _phantom: PhantomData,
         })
