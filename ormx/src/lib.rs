@@ -191,9 +191,7 @@ where
 }
 
 #[ouroboros::self_referencing]
-pub struct SelfRefStream<Args, Item>
-where
-    Args: 'static,
+pub struct SelfRefStream<Args: 'static, Item>
 {
     args: Args,
     #[borrows(args)]
@@ -201,9 +199,7 @@ where
     inner: BoxStream<'this, Result<Item>>,
 }
 
-impl<Args, Item> SelfRefStream<Args, Item>
-where
-    Args: 'static,
+impl<Args: 'static, Item> SelfRefStream<Args, Item>
 {
     #[inline]
     pub fn build(
@@ -218,9 +214,7 @@ where
     }
 }
 
-impl<Args, Item> futures::Stream for SelfRefStream<Args, Item>
-where
-    Args: 'static,
+impl<Args: 'static, Item> futures::Stream for SelfRefStream<Args, Item>
 {
     type Item = Result<Item>;
 
