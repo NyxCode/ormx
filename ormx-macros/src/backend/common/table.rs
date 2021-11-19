@@ -110,23 +110,18 @@ fn stream_all<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
     let all_sql = format!("SELECT {} FROM {}", column_list, table.table);
 
     quote! {
-        fn stream_all<'a>(db: &'a sqlx::Pool<Db>) -> #box_stream<'a, sqlx::Result<Self>>
+        fn stream_all<'a, 'c: 'a, E>(db: E) -> #box_stream<'a, sqlx::Result<Self>>
+        where
+            E: sqlx::Executor<'c, Database = ormx::Db> + 'a
         {
-            Box::pin(
-                ormx::SelfRefStream::build(
-                    (db.clone()),
-                    move |(db)| {
-                        sqlx::query_as!(Self, #all_sql)
-                            .fetch(db)
-                    },
-                )
-            )
-
+            sqlx::query_as!(Self, #all_sql)
+                .fetch(db)
         }
     }
 }
 
 fn stream_all_paginated<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
+    let box_stream = crate::utils::box_stream();
     let mut bindings = B::Bindings::default();
     let all_sql = format!(
         "SELECT {} FROM {} LIMIT {} OFFSET {}",
@@ -141,7 +136,7 @@ fn stream_all_paginated<B: Backend>(table: &Table<B>, column_list: &str) -> Toke
             db: &'a sqlx::Pool<Db>,
             offset: i64,
             limit: i64,
-        ) -> futures::stream::BoxStream<'a, Result<Self, sqlx::Error>> {
+        ) -> #box_stream<'a, sqlx::Result<Self>> {
             Box::pin(
                 ormx::SelfRefStream::build(
                     (db.clone(), offset, limit),

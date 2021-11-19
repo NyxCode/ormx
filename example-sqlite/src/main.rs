@@ -1,15 +1,7 @@
-// #![feature(trace_macros)]
 use chrono::Utc;
-use ormx::{
-    Delete,
-    Insert,
-    Table,
-    Db,
-};
-
+use ormx::exports::futures::StreamExt;
+use ormx::{Db, Delete, Insert, Table};
 use sqlx::SqlitePool;
-
-// trace_macros!(true);
 
 // mod query2;
 
@@ -22,9 +14,10 @@ async fn main() -> anyhow::Result<()> {
 
     let db = SqlitePool::connect(&dotenv::var("DATABASE_URL")?).await?;
     let mut conn = db.acquire().await?;
+
     log::info!("insert a new row into the database");
     let mut new = InsertUser {
-        user_id: 1,
+        id: 1,
         first_name: "Moritz".to_owned(),
         last_name: "Bischof".to_owned(),
         email: "moritz.bischof1@gmail.com".to_owned(),
@@ -58,12 +51,35 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
 
-    log::info!("reload the user, in case it has been modified");
-    new.reload(&db).await?;
-
-    log::info!("use the improved query macro for searching users");
+    // log::info!("use the improved query macro for searching users");
     // let search_result = query2::query_users(&db, Some("NewFirstName"), None).await?;
     // println!("{:?}", search_result);
+    let mut stream = User::stream_all(&db);
+    while let Some(x) = stream.next().await {
+        log::info!("{:?}", x);
+    }
+
+    new.reload(&db).await?;
+
+    log::info!("update a single field");
+    new.set_last_login(&db, Utc::now().naive_utc().timestamp())
+        .await?;
+
+    log::info!("update all fields at once");
+    new.email = "asdf".to_owned();
+    new.update(&db).await?;
+
+    log::info!("apply a patch to the user");
+    new.patch(
+        &db,
+        UpdateUser {
+            first_name: "NewFirstName".to_owned(),
+            last_name: "NewLastName".to_owned(),
+            disabled: Some("Reason".to_owned()),
+            role: Role::Admin,
+        },
+    )
+    .await?;
 
     log::info!("delete the user from the database");
     new.delete(&db).await?;
@@ -72,12 +88,11 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[derive(Debug, ormx::Table)]
-#[ormx(table = "users", id = user_id, insertable, deletable)]
+#[ormx(table = "users", id = id, insertable, deletable)]
 struct User {
-    // map this field to the column "id"
     #[ormx(column = "id")]
-    #[ormx(get_one = get_by_user_id)]
-    user_id: i64,
+    #[ormx(get_one = get_by_id)]
+    id: i64,
     first_name: String,
     last_name: String,
     // generate `User::by_email(&str) -> Result<Option<Self>>`

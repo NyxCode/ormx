@@ -76,7 +76,9 @@ where
         E: Executor<'c, Database = Db> + 'a;
 
     /// Stream all rows from this table.
-    fn stream_all<'a>(db: &'a sqlx::Pool<Db>) -> BoxStream<'a, Result<Self>>;
+    fn stream_all<'a, 'c: 'a, E>(db: E) -> BoxStream<'a, Result<Self>>
+    where
+        E: sqlx::Executor<'c, Database = Db> + 'a;
 
     fn stream_all_paginated<'a>(
         db: &'a sqlx::Pool<Db>,
@@ -191,16 +193,14 @@ where
 }
 
 #[ouroboros::self_referencing]
-pub struct SelfRefStream<Args: 'static, Item>
-{
+pub struct SelfRefStream<Args: 'static, Item> {
     args: Args,
     #[borrows(args)]
     #[covariant] // Box is covariant.
     inner: BoxStream<'this, Result<Item>>,
 }
 
-impl<Args: 'static, Item> SelfRefStream<Args, Item>
-{
+impl<Args: 'static, Item> SelfRefStream<Args, Item> {
     #[inline]
     pub fn build(
         args: Args,
@@ -214,8 +214,7 @@ impl<Args: 'static, Item> SelfRefStream<Args, Item>
     }
 }
 
-impl<Args: 'static, Item> futures::Stream for SelfRefStream<Args, Item>
-{
+impl<Args: 'static, Item> futures::Stream for SelfRefStream<Args, Item> {
     type Item = Result<Item>;
 
     #[inline]

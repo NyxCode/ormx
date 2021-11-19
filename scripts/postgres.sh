@@ -8,4 +8,3 @@ CONTAINER_ID=$(
 )
 CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $CONTAINER_ID)
 echo "DATABASE_URL=postgres://postgres:admin@$CONTAINER_IP/ormx" > .env
-docker attach $CONTAINER_ID

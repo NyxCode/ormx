@@ -1,6 +1,6 @@
 // #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
-use ormx::{Insert, Table, Delete};
+use ormx::{Delete, Insert, Table};
 use sqlx::PgPool;
 
 // trace_macros!(true);
