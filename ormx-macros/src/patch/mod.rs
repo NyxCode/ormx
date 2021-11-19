@@ -27,14 +27,19 @@ pub struct PatchField {
 impl PatchField {
     pub fn fmt_as_argument(&self) -> TokenStream {
         let ident = &self.ident;
-        // let ty = &self.ty;
+        #[cfg(not(feature = "sqlite"))]
+        let ty = &self.ty;
 
         let mut out = quote!(#ident);
+        #[cfg(not(feature = "sqlite"))]
         if self.custom_type {
-            // note: removed 'as #ty' to avoid creating a temporary
-            // that is dropped before the stream is finished.
+            out = quote!(#out as #ty);
+        }
+        #[cfg(feature = "sqlite")]
+        if self.custom_type {
             out = quote!(#out);
         }
+
         if self.by_ref {
             out = quote!(&(#out));
         }

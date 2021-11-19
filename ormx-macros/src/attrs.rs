@@ -12,7 +12,7 @@ pub enum TableAttr {
     // insertable [= [<attribute>]* <ident>]?
     Insertable(Option<Insertable>),
     // deletable
-    Deletable(()),
+    Deletable(())
 }
 
 pub struct Insertable {
@@ -38,7 +38,7 @@ pub enum TableFieldAttr {
     // by_ref
     ByRef(()),
     // insert_attribute = <attribute>
-    InsertAttr(AnyAttribute),
+    InsertAttr(AnyAttribute)
 }
 
 #[derive(Clone)]

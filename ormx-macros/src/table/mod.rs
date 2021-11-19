@@ -3,7 +3,7 @@ use std::{borrow::Cow, convert::TryFrom, marker::PhantomData};
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use syn::{Attribute, DeriveInput, Result, Type, Visibility};
+use syn::{DeriveInput, Result, Type, Visibility, Attribute};
 
 use crate::{
     attrs::{Getter, Insertable},
@@ -19,7 +19,7 @@ pub struct Table<B: Backend> {
     pub id: TableField<B>,
     pub fields: Vec<TableField<B>>,
     pub insertable: Option<Insertable>,
-    pub deletable: bool,
+    pub deletable: bool
 }
 
 #[derive(Clone)]
@@ -80,18 +80,21 @@ impl<B: Backend> TableField<B> {
 
     pub fn fmt_as_argument(&self) -> TokenStream {
         let ident = &self.field;
+        #[cfg(not(feature = "sqlite"))]
+        let ty = &self.ty;
 
         let mut out = quote!(self.#ident);
         if self.by_ref {
             out = quote!(&#out);
         }
+        #[cfg(not(feature = "sqlite"))]
         if self.custom_type {
-            // let ty = &self.ty;
-            // note: removed 'as #ty' to avoid creating a temporary
-            // that is dropped before the stream is finished.
+            out = quote!(#out as #ty);
+        }
+        #[cfg(feature = "sqlite")]
+        if self.custom_type {
             out = quote!(#out);
         }
-
         out
     }
 

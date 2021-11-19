@@ -22,8 +22,7 @@ _docs-rs-build = ["sqlx/runtime-tokio-rustls", "postgres"]
 [dependencies]
 ormx-macros = { path = "../ormx-macros", version = "0.10" }
 futures = "0.3"
-# ouroboros = "0.13.0"
-ouroboros = { git = "https://github.com/joshua-maros/ouroboros.git" }
+ouroboros = "0.13.0"
 
 [dependencies.sqlx]
 version = "0.5"

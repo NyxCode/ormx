@@ -1,7 +1,6 @@
 ## Sqlite ORMX Example
 
-This is an example that shows ormx querying a sqlite database.  The
-ormx queries are shown in 'src/main.rs`.
+This example shows ormx querying a sqlite database.
 
 To try this example, run:
 ```bash
