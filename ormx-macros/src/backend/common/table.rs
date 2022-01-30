@@ -62,7 +62,7 @@ fn get<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
             id: Self::Id,
         ) -> #box_future<'a, sqlx::Result<Self>> {
             Box::pin(async move {
-                sqlx::query_as!(Self, #get_sql, id)
+                sqlx::query_as!(Self, #get_sql, id as Self::Id)
                     .fetch_one(db)
                     .await
             })
@@ -87,7 +87,15 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
         table.id.column(),
         bindings.next().unwrap()
     );
-    let id_argument = &table.id.field;
+    let id_argument = {
+        let id_argument = &table.id.field;
+        let id_type = &table.id.ty;
+        if table.id.custom_type {
+            quote! {self.#id_argument as #id_type}
+        } else {
+            quote! {self.#id_argument}
+        }
+    };
     let other_arguments = table.fields_except_id().map(TableField::fmt_as_argument);
 
     quote! {
@@ -96,7 +104,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
         ) -> #box_future<'a, sqlx::Result<()>> {
             Box::pin(async move {
-                sqlx::query!(#update_sql, #( #other_arguments, )* self.#id_argument)
+                sqlx::query!(#update_sql, #( #other_arguments, )* #id_argument)
                     .execute(db)
                     .await?;
                 Ok(())
