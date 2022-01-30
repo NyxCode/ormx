@@ -3,7 +3,7 @@ use std::{borrow::Cow, convert::TryFrom, marker::PhantomData};
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{Attribute, DeriveInput, Result, Type, Visibility};
+use syn::{DeriveInput, Result, Type, Visibility, Attribute};
 
 use crate::{
     attrs::{Getter, Insertable},
@@ -19,7 +19,7 @@ pub struct Table<B: Backend> {
     pub id: TableField<B>,
     pub fields: Vec<TableField<B>>,
     pub insertable: Option<Insertable>,
-    pub deletable: bool,
+    pub deletable: bool
 }
 
 #[derive(Clone)]
