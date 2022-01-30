@@ -2,8 +2,8 @@ use std::{borrow::Cow, convert::TryFrom, marker::PhantomData};
 
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
-use syn::{DeriveInput, Result, Type, Visibility, Attribute};
+use quote::{quote, ToTokens};
+use syn::{Attribute, DeriveInput, Result, Type, Visibility};
 
 use crate::{
     attrs::{Getter, Insertable},
@@ -19,7 +19,7 @@ pub struct Table<B: Backend> {
     pub id: TableField<B>,
     pub fields: Vec<TableField<B>>,
     pub insertable: Option<Insertable>,
-    pub deletable: bool
+    pub deletable: bool,
 }
 
 #[derive(Clone)]
@@ -65,10 +65,11 @@ impl<B: Backend> TableField<B> {
     pub fn fmt_for_select(&self) -> String {
         if self.custom_type {
             format!(
-                "{} AS {}{}: _{}",
+                "{} AS {}{}: {}{}",
                 self.column(),
                 B::QUOTE,
                 self.field,
+                self.ty.to_token_stream(),
                 B::QUOTE
             )
         } else if self.field == self.column_name {
