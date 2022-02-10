@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
         disabled: None,
         role: Role::User,
     }
-    .insert(&mut *db.acquire().await?)
+    .insert(&db)
     .await?;
 
     log::info!("update a single field");

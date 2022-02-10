@@ -66,13 +66,13 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
         impl ormx::Insert for #insert_ident {
             type Table = #table_ident;
 
-            fn insert(
+            fn insert<'a, 'c: 'a>(
                 self,
-                db: &mut sqlx::PgConnection,
-            ) -> #box_future<sqlx::Result<Self::Table>> {
+                db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
+            ) -> #box_future<'a, sqlx::Result<Self::Table>> {
                 Box::pin(async move {
                     let _generated = sqlx::query!(#insert_sql, #( #insert_field_exprs, )*)
-                        .#fetch_funtion(db as &mut sqlx::PgConnection)
+                        .#fetch_funtion(db)
                         .await?;
 
                     Ok(Self::Table {

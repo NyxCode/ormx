@@ -26,14 +26,16 @@ pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
         impl ormx::Insert for #insert_ident {
             type Table = #table_ident;
 
-            fn insert(
+            fn insert<'a, 'c: 'a>(
                 self,
-                db: &mut sqlx::MySqlConnection,
-            ) -> #box_future<sqlx::Result<Self::Table>> {
+                db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
+            ) -> #box_future<'a, sqlx::Result<Self::Table>> {
                 Box::pin(async move {
+                    let mut tx = db.begin().await?;
                     #insert
                     #query_id
                     #query_default
+                    tx.commit().await?;
                     Ok(#construct_row)
                 })
             }
@@ -85,7 +87,7 @@ fn query_default(table: &Table<MySqlBackend>) -> TokenStream {
 
     quote! {
         let _generated = sqlx::query!(#query_default_sql, _id)
-            .fetch_one(db)
+            .fetch_one(&mut tx)
             .await?;
     }
 }
@@ -104,7 +106,7 @@ fn insert(table: &Table<MySqlBackend>) -> TokenStream {
 
     quote! {
         sqlx::query!(#insert_sql, #( self.#insert_field_idents, )*)
-            .execute(db as &mut sqlx::MySqlConnection)
+            .execute(&mut tx)
             .await?;
     }
 }
@@ -119,7 +121,7 @@ fn query_id(table: &Table<MySqlBackend>) -> TokenStream {
     match table.id.default {
         true => quote! {
             let _id = sqlx::query!("SELECT LAST_INSERT_ID() AS id")
-                .fetch_one(db as &mut sqlx::MySqlConnection)
+                .fetch_one(&mut tx)
                 .await?
                 .id;
         },
