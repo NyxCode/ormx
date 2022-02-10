@@ -79,7 +79,7 @@ fn query_default(table: &Table<MySqlBackend>) -> TokenStream {
     let query_default_sql = format!(
         "SELECT {} FROM {} WHERE {} = ?",
         default_fields.map(TableField::fmt_for_select).join(", "),
-        table.table,
+        table.name(),
         table.id.column()
     );
 
@@ -97,7 +97,7 @@ fn insert(table: &Table<MySqlBackend>) -> TokenStream {
 
     let insert_sql = format!(
         "INSERT INTO {} ({}) VALUES ({})",
-        table.table,
+        table.name(),
         insert_fields.iter().map(|field| field.column()).join(", "),
         MySqlBindings.take(insert_fields.len()).join(", ")
     );

@@ -124,10 +124,20 @@ impl<B: Backend> TryFrom<&syn::DeriveInput> for Table<B> {
             ));
         }
 
+        let table = table.ok_or_else(|| missing_attr("table"))?;
+        let reserved_table_name = B::RESERVED_IDENTS.contains(&&*table.to_string().to_uppercase());
+        if reserved_table_name {
+            proc_macro_error::emit_warning!(
+                Span::call_site(),
+                "This table name is a reserved keyword, you might want to consider choosing a different name."
+            );
+        }
+
         Ok(Table {
             ident: value.ident.clone(),
             vis: value.vis.clone(),
-            table: table.ok_or_else(|| missing_attr("table"))?,
+            table,
+            reserved_table_name,
             id,
             insertable,
             fields,
