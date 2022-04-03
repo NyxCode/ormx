@@ -141,7 +141,7 @@ pub fn setters<B: Backend>(table: &Table<B>) -> TokenStream {
     }
 }
 
-pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
+pub(crate) fn impl_patch<B: Backend>(patch: &Patch<B>) -> TokenStream {
     let patch_ident = &patch.ident;
     let table_path = &patch.table;
     let field_idents = &patch
@@ -165,7 +165,7 @@ pub(crate) fn impl_patch<B: Backend>(patch: &Patch) -> TokenStream {
 
     let sql = format!(
         "UPDATE {} SET {} WHERE {} = {}",
-        &patch.table_name,
+        &patch.table_name(),
         assignments,
         patch.id,
         bindings.next().unwrap()

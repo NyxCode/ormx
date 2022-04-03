@@ -53,7 +53,7 @@ pub trait Backend: Sized + Clone {
     }
 
     /// Implement [Patch]
-    fn impl_patch(patch: &Patch) -> TokenStream {
+    fn impl_patch(patch: &Patch<Self>) -> TokenStream {
         common::impl_patch::<Self>(patch)
     }
 }
