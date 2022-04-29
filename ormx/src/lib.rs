@@ -194,5 +194,8 @@ where
     type Table: Table;
 
     /// Insert a row into the database, returning the inserted row.
-    fn insert(self, db: &mut <Db as Database>::Connection) -> BoxFuture<Result<Self::Table>>;
+    fn insert<'a, 'c: 'a>(
+        self,
+        db: impl Executor<'c, Database = Db> + 'a,
+    ) -> BoxFuture<'a, Result<Self::Table>>;
 }
