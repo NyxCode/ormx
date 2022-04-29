@@ -83,8 +83,10 @@ impl<B: Backend> TableField<B> {
         let ty = &self.ty;
 
         let mut out = quote!(self.#ident);
+        let mut ty = quote!(#ty);
         if self.by_ref {
             out = quote!(&#out);
+            ty = quote!(&#ty);
         }
         if self.custom_type {
             out = quote!(#out as #ty);
