@@ -24,7 +24,7 @@ ormx-macros = { path = "../ormx-macros", version = "0.10" }
 futures = "0.3"
 
 [dependencies.sqlx]
-version = "0.5"
+version = "0.6"
 default-features = false
 features = ["macros"]
 
