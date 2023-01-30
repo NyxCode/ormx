@@ -41,7 +41,7 @@ pub mod exports {
     pub use crate::query2::map::*;
 }
 
-#[cfg(any(feature = "mysql", feature = "postgres"))]
+#[cfg(any(feature = "mysql", feature = "postgres", feature = "sqlite"))]
 mod query2;
 
 #[cfg(feature = "mysql")]
@@ -81,8 +81,15 @@ where
         db: impl Executor<'c, Database = Db> + 'a,
     ) -> BoxStream<'a, Result<Self>>;
 
+    #[cfg(not(feature = "sqlite"))]
     fn stream_all_paginated<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
+        offset: i64,
+        limit: i64,
+    ) -> BoxStream<'a, Result<Self>>;
+    #[cfg(feature = "sqlite")]
+    fn stream_all_paginated<'a>(
+        db: &'a sqlx::Pool<Db>,
         offset: i64,
         limit: i64,
     ) -> BoxStream<'a, Result<Self>>;
@@ -96,6 +103,7 @@ where
         Box::pin(Self::stream_all(db).try_collect())
     }
 
+    #[cfg(not(feature = "sqlite"))]
     fn all_paginated<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         offset: i64,
@@ -105,6 +113,17 @@ where
 
         Box::pin(Self::stream_all_paginated(db, offset, limit).try_collect())
     }
+    #[cfg(feature = "sqlite")]
+    fn all_paginated<'a>(
+        db: &'a sqlx::Pool<Db>,
+        offset: i64,
+        limit: i64,
+    ) -> BoxFuture<'a, Result<Vec<Self>>> {
+        use futures::TryStreamExt;
+
+        Box::pin(Self::stream_all_paginated(db, offset, limit).try_collect())
+    }
+
     /// Applies a patch to this row.
     fn patch<'a, 'c: 'a, P>(
         &'a mut self,
@@ -198,4 +217,38 @@ where
         self,
         db: impl Executor<'c, Database = Db> + 'a,
     ) -> BoxFuture<'a, Result<Self::Table>>;
+}
+
+#[ouroboros::self_referencing]
+pub struct SelfRefStream<Args: 'static, Item> {
+    args: Args,
+    #[borrows(args)]
+    #[covariant] // Box is covariant.
+    inner: BoxStream<'this, Result<Item>>,
+}
+
+impl<Args: 'static, Item> SelfRefStream<Args, Item> {
+    #[inline]
+    pub fn build(
+        args: Args,
+        inner_builder: impl for<'this> FnOnce(&'this Args) -> BoxStream<'this, Result<Item>>,
+    ) -> Self {
+        SelfRefStreamBuilder {
+            args,
+            inner_builder,
+        }
+        .build()
+    }
+}
+
+impl<Args: 'static, Item> futures::Stream for SelfRefStream<Args, Item> {
+    type Item = Result<Item>;
+
+    #[inline]
+    fn poll_next(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut futures::task::Context<'_>,
+    ) -> futures::task::Poll<Option<Self::Item>> {
+        self.with_inner_mut(|s| s.as_mut().poll_next(cx))
+    }
 }

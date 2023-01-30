@@ -80,6 +80,7 @@ impl<B: Backend> TableField<B> {
 
     pub fn fmt_as_argument(&self) -> TokenStream {
         let ident = &self.field;
+        #[cfg(not(feature = "sqlite"))]
         let ty = &self.ty;
 
         let mut out = quote!(self.#ident);
@@ -88,10 +89,14 @@ impl<B: Backend> TableField<B> {
             out = quote!(&#out);
             ty = quote!(&#ty);
         }
+        #[cfg(not(feature = "sqlite"))]
         if self.custom_type {
             out = quote!(#out as #ty);
         }
-
+        #[cfg(feature = "sqlite")]
+        if self.custom_type {
+            out = quote!(#out);
+        }
         out
     }
 

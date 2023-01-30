@@ -9,13 +9,15 @@ mod common;
 mod mysql;
 #[cfg(feature = "postgres")]
 mod postgres;
+#[cfg(feature = "sqlite")]
+mod sqlite;
 
 #[cfg(feature = "mysql")]
 pub type Implementation = mysql::MySqlBackend;
 #[cfg(feature = "postgres")]
 pub type Implementation = postgres::PgBackend;
 #[cfg(feature = "sqlite")]
-compile_error!("sqlite is currently not supported");
+pub type Implementation = sqlite::SqliteBackend;
 
 pub trait Backend: Sized + Clone {
     const QUOTE: char;

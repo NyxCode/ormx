@@ -71,7 +71,7 @@ pub fn get_optional(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) ->
             db: impl sqlx::Executor<'_, Database = ormx::Db>,
             by: #by_ty,
         ) -> sqlx::Result<Option<Self>> {
-            sqlx::query_as!(Self, #sql, by)
+           sqlx::query_as!(Self, #sql, by)
                 .fetch_optional(db)
                 .await
         }
@@ -84,7 +84,7 @@ pub fn get_many(vis: &Visibility, ident: &Ident, by_ty: &Type, sql: &str) -> Tok
             db: impl sqlx::Executor<'_, Database = ormx::Db>,
             by: #by_ty,
         ) -> sqlx::Result<Vec<Self>> {
-            sqlx::query_as!(Self, #sql, by)
+           sqlx::query_as!(Self, #sql, by)
                 .fetch_all(db)
                 .await
         }
@@ -123,7 +123,8 @@ pub fn setters<B: Backend>(table: &Table<B>) -> TokenStream {
                     db: impl sqlx::Executor<'_, Database = ormx::Db>,
                     value: #field_ty
                 ) -> sqlx::Result<()> {
-                    sqlx::query!(#sql, #value, <Self as ormx::Table>::id(self))
+                    let id = <Self as ormx::Table>::id(self);
+                    sqlx::query!(#sql, #value, id)
                         .execute(db)
                         .await?;
                     self.#field_ident = value;

@@ -61,7 +61,7 @@ fn get<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
             id: Self::Id,
         ) -> #box_future<'a, sqlx::Result<Self>> {
-            Box::pin(async move {
+           Box::pin(async move {
                 sqlx::query_as!(Self, #get_sql, id)
                     .fetch_one(db)
                     .await
@@ -95,7 +95,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
             &'a self,
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
         ) -> #box_future<'a, sqlx::Result<()>> {
-            Box::pin(async move {
+           Box::pin(async move {
                 sqlx::query!(#update_sql, #( #other_arguments, )* self.#id_argument)
                     .execute(db)
                     .await?;
@@ -113,7 +113,7 @@ fn stream_all<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
         fn stream_all<'a, 'c: 'a>(
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
         ) -> #box_stream<'a, sqlx::Result<Self>> {
-            sqlx::query_as!(Self, #all_sql)
+           sqlx::query_as!(Self, #all_sql)
                 .fetch(db)
         }
     }
@@ -130,6 +130,7 @@ fn stream_all_paginated<B: Backend>(table: &Table<B>, column_list: &str) -> Toke
         bindings.next().unwrap()
     );
 
+    #[cfg(not(feature = "sqlite"))]
     quote! {
         fn stream_all_paginated<'a, 'c: 'a>(
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
@@ -138,6 +139,24 @@ fn stream_all_paginated<B: Backend>(table: &Table<B>, column_list: &str) -> Toke
         ) -> #box_stream<'a, sqlx::Result<Self>> {
             sqlx::query_as!(Self, #all_sql, limit, offset)
                 .fetch(db)
+        }
+    }
+    #[cfg(feature = "sqlite")]
+    quote! {
+        fn stream_all_paginated<'a>(
+            db: &'a sqlx::Pool<Db>,
+            offset: i64,
+            limit: i64,
+        ) -> #box_stream<'a, sqlx::Result<Self>> {
+            Box::pin(
+                ormx::SelfRefStream::build(
+                    (db.clone(), offset, limit),
+                    move |(db, offset, limit)| {
+                        sqlx::query_as!(Self, #all_sql, *limit, *offset)
+                            .fetch(db)
+                    },
+                )
+            )
         }
     }
 }
@@ -163,7 +182,7 @@ fn delete<B: Backend>(table: &Table<B>) -> TokenStream {
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
             id: #id_ty
         ) -> #box_future<'a, sqlx::Result<()>> {
-            use #result_import;
+           use #result_import;
 
             Box::pin(async move {
                 let result = sqlx::query!(#delete_sql, id)
