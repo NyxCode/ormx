@@ -51,7 +51,7 @@ fn get<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
     let get_sql = format!(
         "SELECT {} FROM {} WHERE {} = {}",
         column_list,
-        table.table,
+        table.name(),
         table.id.column(),
         B::Bindings::default().next().unwrap()
     );
@@ -82,7 +82,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
 
     let update_sql = format!(
         "UPDATE {} SET {} WHERE {} = {}",
-        table.table,
+        table.name(),
         assignments,
         table.id.column(),
         bindings.next().unwrap()
@@ -107,7 +107,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
 
 fn stream_all<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
     let box_stream = crate::utils::box_stream();
-    let all_sql = format!("SELECT {} FROM {}", column_list, table.table);
+    let all_sql = format!("SELECT {} FROM {}", column_list, table.name());
 
     quote! {
         fn stream_all<'a, 'c: 'a>(
@@ -125,7 +125,7 @@ fn stream_all_paginated<B: Backend>(table: &Table<B>, column_list: &str) -> Toke
     let all_sql = format!(
         "SELECT {} FROM {} LIMIT {} OFFSET {}",
         column_list,
-        table.table,
+        table.name(),
         bindings.next().unwrap(),
         bindings.next().unwrap()
     );
@@ -147,7 +147,7 @@ fn delete<B: Backend>(table: &Table<B>) -> TokenStream {
     let id_ty = &table.id.ty;
     let delete_sql = format!(
         "DELETE FROM {} WHERE {} = {}",
-        table.table,
+        table.name(),
         table.id.column(),
         B::Bindings::default().next().unwrap()
     );

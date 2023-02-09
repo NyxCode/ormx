@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::{convert::TryFrom, borrow::Cow, marker::PhantomData};
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -8,12 +8,14 @@ use crate::backend::{Backend, Implementation};
 
 mod parse;
 
-pub struct Patch {
+pub struct Patch<B: Backend> {
     pub ident: Ident,
     pub table_name: String,
+    pub reserved_table_name: bool,
     pub table: Path,
     pub id: String,
     pub fields: Vec<PatchField>,
+    pub _phantom: PhantomData<*const B>,
 }
 
 pub struct PatchField {
@@ -22,6 +24,16 @@ pub struct PatchField {
     pub ty: Type,
     pub custom_type: bool,
     pub by_ref: bool,
+}
+
+impl<B: Backend> Patch<B> {
+    pub fn table_name(&self) -> Cow<str> {
+        if self.reserved_table_name {
+            format!("{}{}{}", B::QUOTE, self.table_name, B::QUOTE).into()
+        } else {
+            Cow::Borrowed(&self.table_name)
+        }
+    }
 }
 
 impl PatchField {
