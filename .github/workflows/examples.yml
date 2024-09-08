@@ -45,7 +45,6 @@ jobs:
   postgres:
     name: PostgreSQL Example
     runs-on: ubuntu-latest
-    needs: sqlx-cli
 
     services:
       postgres:
