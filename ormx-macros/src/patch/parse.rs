@@ -9,7 +9,7 @@ use crate::{
     utils::{missing_attr, set_once},
 };
 
-impl TryFrom<&syn::DeriveInput> for Patch {
+impl TryFrom<&DeriveInput> for Patch {
     type Error = Error;
 
     fn try_from(value: &DeriveInput) -> Result<Self> {
@@ -45,7 +45,7 @@ impl TryFrom<&syn::DeriveInput> for Patch {
     }
 }
 
-impl TryFrom<&syn::Field> for PatchField {
+impl TryFrom<&Field> for PatchField {
     type Error = Error;
 
     fn try_from(value: &Field) -> Result<Self> {

@@ -16,10 +16,10 @@ pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
 
     let table_ident = &table.ident;
 
-    let insert = insert(&table);
-    let query_id = query_id(&table);
-    let query_default = query_default(&table);
-    let construct_row = construct_row(&table);
+    let insert = insert(table);
+    let query_id = query_id(table);
+    let query_default = query_default(table);
+    let construct_row = construct_row(table);
 
     quote! {
         impl ormx::Insert for #insert_ident {

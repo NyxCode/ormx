@@ -172,7 +172,7 @@ impl_parse!(PatchFieldAttr {
 });
 
 pub struct AnyAttribute(pub Vec<Attribute>);
-impl syn::parse::Parse for AnyAttribute {
+impl Parse for AnyAttribute {
     fn parse(input: ParseStream) -> Result<Self> {
         input.call(Attribute::parse_outer).map(Self)
     }

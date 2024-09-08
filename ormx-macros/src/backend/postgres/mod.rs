@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
-use proc_macro2::TokenStream;
-
 use crate::{backend::Backend, table::Table};
+use proc_macro2::TokenStream;
+use quote::quote;
 
 mod insert;
 
@@ -27,6 +27,10 @@ impl Backend for PgBackend {
         "WHERE", "WINDOW", "WITH"
     ];
     type Bindings = PgBindings;
+
+    fn query_result() -> TokenStream {
+        quote!(sqlx::postgres::PgQueryResult)
+    }
 
     fn impl_insert(table: &Table<Self>) -> TokenStream {
         insert::impl_insert(table)

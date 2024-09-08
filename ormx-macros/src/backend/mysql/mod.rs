@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
-use proc_macro2::TokenStream;
-
 use crate::{backend::Backend, table::Table};
+use proc_macro2::TokenStream;
+use quote::quote;
 
 mod insert;
 
@@ -13,6 +13,10 @@ impl Backend for MySqlBackend {
     const QUOTE: char = '`';
     const RESERVED_IDENTS: &'static [&'static str] = &[];
     type Bindings = MySqlBindings;
+
+    fn query_result() -> TokenStream {
+        quote!(sqlx::mysql::MySqlQueryResult)
+    }
 
     fn impl_insert(table: &Table<Self>) -> TokenStream {
         insert::impl_insert(table)

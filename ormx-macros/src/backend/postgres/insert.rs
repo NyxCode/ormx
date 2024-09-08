@@ -55,7 +55,7 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
         .map(|f| f.fmt_as_argument())
         .collect::<Vec<TokenStream>>();
 
-    let fetch_funtion = if default_fields.is_empty() {
+    let fetch_fn = if default_fields.is_empty() {
         Ident::new("execute", Span::call_site())
     } else {
         Ident::new("fetch_one", Span::call_site())
@@ -70,7 +70,7 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
                 db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
             ) -> sqlx::Result<Self::Table> {
                 let _generated = sqlx::query!(#insert_sql, #( #insert_field_exprs, )*)
-                    .#fetch_funtion(db)
+                    .#fetch_fn(db)
                     .await?;
 
                 Ok(Self::Table {

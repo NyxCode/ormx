@@ -33,11 +33,11 @@
 Add ormx and sqlx to your `Cargo.toml`
 ```toml
 [dependencies.ormx]
-version = "0.7"
+version = "0.11"
 features = ["mysql"]
 
 [dependencies.sqlx]
-version = "0.5"
+version = "0.8"
 default-features = false
 features = ["macros", "mysql", "runtime-tokio-rustls"]
 ```

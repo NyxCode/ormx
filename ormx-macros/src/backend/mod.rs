@@ -24,6 +24,9 @@ pub trait Backend: Sized + Clone {
 
     type Bindings: Iterator<Item = Cow<'static, str>> + Default;
 
+    /// Returns the type used to return query results, e.g `sqlx::postgres::PgQueryResult`
+    fn query_result() -> TokenStream;
+
     /// Generate an `impl <Table>` block, containing getter methods
     fn impl_getters(table: &Table<Self>) -> TokenStream {
         common::getters::<Self>(table)
