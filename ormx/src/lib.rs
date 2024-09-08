@@ -30,9 +30,12 @@
 //! # Documentation
 //! See the docs of [derive(Table)](derive.Table.html) and [Patch](trait.Patch.html).
 
-use futures::{future::BoxFuture, stream::BoxStream};
-pub use ormx_macros::*;
+use std::future::Future;
+
+use futures::{Stream, TryStreamExt};
 use sqlx::{Database, Executor, Result};
+
+pub use ormx_macros::*;
 
 #[doc(hidden)]
 pub mod exports {
@@ -66,7 +69,7 @@ where
     fn insert(
         db: &mut <Db as Database>::Connection,
         row: impl Insert<Table = Self>,
-    ) -> BoxFuture<Result<Self>> {
+    ) -> impl Future<Output = Result<Self>> + Send + '_ {
         row.insert(db)
     }
 
@@ -74,69 +77,66 @@ where
     fn get<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         id: Self::Id,
-    ) -> BoxFuture<'a, Result<Self>>;
+    ) -> impl Future<Output = Result<Self>> + Send + 'a;
 
     /// Stream all rows from this table.
     fn stream_all<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxStream<'a, Result<Self>>;
+    ) -> impl Stream<Item = Result<Self>> + Send + 'a;
 
     fn stream_all_paginated<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         offset: i64,
         limit: i64,
-    ) -> BoxStream<'a, Result<Self>>;
+    ) -> impl Stream<Item = Result<Self>> + Send + 'a;
 
     /// Load all rows from this table.
     fn all<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<Vec<Self>>> {
-        use futures::TryStreamExt;
-
-        Box::pin(Self::stream_all(db).try_collect())
+    ) -> impl Future<Output = Result<Vec<Self>>> + Send + 'a {
+        Self::stream_all(db).try_collect()
     }
 
     fn all_paginated<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         offset: i64,
         limit: i64,
-    ) -> BoxFuture<'a, Result<Vec<Self>>> {
-        use futures::TryStreamExt;
-
-        Box::pin(Self::stream_all_paginated(db, offset, limit).try_collect())
+    ) -> impl Future<Output = Result<Vec<Self>>> + Send + 'a {
+        Self::stream_all_paginated(db, offset, limit).try_collect()
     }
+
     /// Applies a patch to this row.
     fn patch<'a, 'c: 'a, P>(
         &'a mut self,
         db: impl Executor<'c, Database = Db> + 'a,
         patch: P,
-    ) -> BoxFuture<'a, Result<()>>
+    ) -> impl Future<Output = Result<()>> + Send + 'a
     where
         P: Patch<Table = Self>,
     {
-        Box::pin(async move {
+        async move {
             let patch: P = patch;
-            patch.patch_row(db, self.id()).await?;
+            patch.patch_row(db, self.id()).send().await?;
             patch.apply_to(self);
             Ok(())
-        })
+        }
     }
 
     /// Updates all fields of this row, regardless if they have been changed or not.
     fn update<'a, 'c: 'a>(
         &'a self,
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>>;
+    ) -> impl Future<Output = Result<()>> + Send + 'a;
 
-    // Refresh this row, querying all columns from the database.
+    /// Refresh this row, querying all columns from the database.
     fn reload<'a, 'c: 'a>(
         &'a mut self,
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>> {
-        Box::pin(async move {
-            *self = Self::get(db, self.id()).await?;
+    ) -> impl Future<Output = Result<()>> + Send + 'a {
+        async move {
+            *self = Self::get(db, self.id()).send().await?;
             Ok(())
-        })
+        }
     }
 }
 
@@ -148,13 +148,13 @@ where
     fn delete_row<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         id: Self::Id,
-    ) -> BoxFuture<'a, Result<()>>;
+    ) -> impl Future<Output = Result<()>> + Send + 'a;
 
     /// Deletes this row from the database
     fn delete<'a, 'c: 'a>(
         self,
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>> {
+    ) -> impl Future<Output = Result<()>> + Send + 'a {
         Self::delete_row(db, self.id())
     }
 
@@ -162,7 +162,7 @@ where
     fn delete_ref<'a, 'c: 'a>(
         &self,
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<()>> {
+    ) -> impl Future<Output = Result<()>> + Send + 'a {
         Self::delete_row(db, self.id())
     }
 }
@@ -175,7 +175,7 @@ where
     type Table: Table;
 
     /// Applies the data of this patch to the given entity.
-    /// This does not persist the change in the database.  
+    /// This does not persist the change in the database.
     fn apply_to(self, entity: &mut Self::Table);
 
     /// Applies this patch to a row in the database.
@@ -183,7 +183,7 @@ where
         &'a self,
         db: impl Executor<'c, Database = Db> + 'a,
         id: <Self::Table as Table>::Id,
-    ) -> BoxFuture<'a, Result<()>>;
+    ) -> impl Future<Output = Result<()>> + Send + 'a;
 }
 
 /// A type which can be inserted as a row into the database.
@@ -197,5 +197,17 @@ where
     fn insert<'a, 'c: 'a>(
         self,
         db: impl Executor<'c, Database = Db> + 'a,
-    ) -> BoxFuture<'a, Result<Self::Table>>;
+    ) -> impl Future<Output = Result<Self::Table>> + Send + 'a;
 }
+
+// Ridiculous workaround for [#100013](https://github.com/rust-lang/rust/issues/100013#issuecomment-2210995259).
+trait SendFuture: Future {
+    fn send(self) -> impl Future<Output = Self::Output> + Send
+    where
+        Self: Sized + Send,
+    {
+        self
+    }
+}
+
+impl<T: Future> SendFuture for T {}
