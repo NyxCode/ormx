@@ -3,7 +3,7 @@ use syn::{Error, Result};
 
 macro_rules! stream {
     ($($t:tt)*) => {
-        quote!(impl ormx::exports::futures::stream::Stream<Item = $($t)*> + Send + Unpin)
+        quote!(impl ormx::exports::Stream<Item = $($t)*> + Send + Unpin)
     };
 }
 pub(crate) use stream;

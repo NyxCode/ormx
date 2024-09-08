@@ -39,7 +39,7 @@ pub use ormx_macros::*;
 
 #[doc(hidden)]
 pub mod exports {
-    pub use futures;
+    pub use futures::Stream;
 
     pub use crate::query2::map::*;
 }

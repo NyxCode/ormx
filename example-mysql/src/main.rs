@@ -1,12 +1,9 @@
-// #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
 use log::LevelFilter;
-use ormx::{Insert, Table};
+use ormx::{Delete, Insert, Table};
 use sqlx::MySqlPool;
 
-// trace_macros!(true);
-
-// To run this example-postgres, first run `/scripts/postgres.sh` to start postgres in a docker container and
+// To run this example, first run `/scripts/mariadb.sh` to start mariadb in a docker container and
 // write the database URL to `.env`. Then, source `.env` (`. .env`) and run `cargo run`
 
 mod query2;
@@ -63,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[derive(Debug, ormx::Table)]
-#[ormx(table = "users", id = user_id, insertable)]
+#[ormx(table = "users", id = user_id, insertable, deletable)]
 struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]

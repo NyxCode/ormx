@@ -1,4 +1,4 @@
-use futures::stream::BoxStream;
+use futures::Stream;
 use sqlx::{Database, Executor, IntoArguments, Error, query::Map};
 
 #[doc(hidden)]
@@ -45,7 +45,7 @@ macro_rules! make_conditional_map_ty {
                 $fa: 'q + Send + IntoArguments<'q, DB>,
             )*
         {
-            pub fn fetch<'e, 'c: 'e, E>(self, executor: E) -> BoxStream<'e, sqlx::Result<O>>
+            pub fn fetch<'e, 'c: 'e, E>(self, executor: E) -> impl Stream<Item = sqlx::Result<O>> + Send + Unpin + 'e
             where
                 'q: 'e,
                 E: 'e + Executor<'c, Database = DB>,

@@ -8,27 +8,6 @@ use crate::{
     table::{Table, TableField},
 };
 
-fn insert_sql(table: &Table<PgBackend>, insert_fields: &[&TableField<PgBackend>]) -> String {
-    let columns = insert_fields.iter().map(|field| field.column()).join(", ");
-    let fields = PgBindings::default().take(insert_fields.len()).join(", ");
-    let returning_fields = table
-        .default_fields()
-        .map(TableField::fmt_for_select)
-        .join(", ");
-
-    if returning_fields.is_empty() {
-        format!(
-            "INSERT INTO {} ({}) VALUES ({})",
-            table.table, columns, fields
-        )
-    } else {
-        format!(
-            "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
-            table.table, columns, fields, returning_fields
-        )
-    }
-}
-
 pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
     let insert_ident = match &table.insertable {
         Some(i) => &i.ident,
@@ -39,21 +18,10 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
     let default_fields: Vec<&TableField<PgBackend>> = table.default_fields().collect();
 
     let table_ident = &table.ident;
-    let insert_field_idents = insert_fields
-        .iter()
-        .map(|field| &field.field)
-        .collect::<Vec<&Ident>>();
-    let default_field_idents = default_fields
-        .iter()
-        .map(|field| &field.field)
-        .collect::<Vec<&Ident>>();
-
+    let insert_field_idents = insert_fields.iter().map(|field| &field.field);
+    let default_field_idents = default_fields.iter().map(|field| &field.field);
     let insert_sql = insert_sql(table, &insert_fields);
-
-    let insert_field_exprs = insert_fields
-        .iter()
-        .map(|f| f.fmt_as_argument())
-        .collect::<Vec<TokenStream>>();
+    let insert_field_exprs = insert_fields.iter().map(|f| f.fmt_as_argument());
 
     let fetch_fn = if default_fields.is_empty() {
         Ident::new("execute", Span::call_site())
@@ -79,5 +47,26 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
                 })
             }
         }
+    }
+}
+
+fn insert_sql(table: &Table<PgBackend>, insert_fields: &[&TableField<PgBackend>]) -> String {
+    let columns = insert_fields.iter().map(|field| field.column()).join(", ");
+    let fields = PgBindings::default().take(insert_fields.len()).join(", ");
+    let returning_fields = table
+        .default_fields()
+        .map(TableField::fmt_for_select)
+        .join(", ");
+
+    if returning_fields.is_empty() {
+        format!(
+            "INSERT INTO {} ({}) VALUES ({})",
+            table.table, columns, fields
+        )
+    } else {
+        format!(
+            "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
+            table.table, columns, fields, returning_fields
+        )
     }
 }
