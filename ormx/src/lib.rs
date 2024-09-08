@@ -33,7 +33,7 @@
 use std::future::Future;
 
 use futures::{Stream, TryStreamExt};
-use sqlx::{Database, Executor, Result};
+use sqlx::{Executor, Result};
 
 pub use ormx_macros::*;
 
@@ -66,10 +66,10 @@ where
     fn id(&self) -> Self::Id;
 
     /// Insert a row into the database.
-    fn insert(
-        db: &mut <Db as Database>::Connection,
+    fn insert<'a, 'c: 'a>(
+        db: impl Executor<'c, Database = Db> + 'a,
         row: impl Insert<Table = Self>,
-    ) -> impl Future<Output = Result<Self>> + Send + '_ {
+    ) -> impl Future<Output = Result<Self>> + Send + 'a {
         row.insert(db)
     }
 
