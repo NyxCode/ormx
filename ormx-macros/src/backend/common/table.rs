@@ -101,7 +101,15 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
 
 fn stream_all<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
     let return_type = crate::utils::stream!(sqlx::Result<Self>);
-    let all_sql = format!("SELECT {} FROM {}", column_list, table.name());
+    let order_by = match &table.order_by {
+        None => &format!("{} DESC", table.id.column()),
+        Some(by) => by,
+    };
+    let all_sql = format!(
+        "SELECT {} FROM {} ORDER BY {order_by}",
+        column_list,
+        table.name()
+    );
 
     quote! {
         fn stream_all<'a, 'c: 'a>(
@@ -116,8 +124,12 @@ fn stream_all<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
 fn stream_all_paginated<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
     let return_type = crate::utils::stream!(sqlx::Result<Self>);
     let mut bindings = B::Bindings::default();
+    let order_by = match &table.order_by {
+        None => &format!("{} DESC", table.id.column()),
+        Some(by) => by,
+    };
     let all_sql = format!(
-        "SELECT {} FROM {} LIMIT {} OFFSET {}",
+        "SELECT {} FROM {} ORDER BY {order_by} LIMIT {} OFFSET {} ",
         column_list,
         table.name(),
         bindings.next().unwrap(),

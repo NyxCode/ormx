@@ -55,7 +55,11 @@ async fn main() -> anyhow::Result<()> {
 
     log::info!("use the improved query macro for searching users");
     let search_result = query2::query_users(&db, Some("NewFirstName"), None).await?;
-    println!("{:?}", search_result);
+    log::info!("search result: {:?}", search_result);
+
+    log::info!("load all users in the order specified by the 'order_by' attribute");
+    let all = User::all_paginated(&db, 0, 100).await?;
+    log::info!("all users: {all:?}");
 
     log::info!("delete the user from the database");
     new.delete(&db).await?;
@@ -64,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[derive(Debug, ormx::Table)]
-#[ormx(table = "users", id = user_id, insertable, deletable)]
+#[ormx(table = "users", id = user_id, insertable, deletable, order_by = "email ASC")]
 struct User {
     // map this field to the column "id"
     #[ormx(column = "id")]

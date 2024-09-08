@@ -13,6 +13,8 @@ pub enum TableAttr {
     Insertable(Option<Insertable>),
     // deletable
     Deletable(()),
+    // order_by = <string>
+    OrderBy(String),
 }
 
 pub struct Insertable {
@@ -144,7 +146,8 @@ impl_parse!(TableAttr {
     "table" => Table(= String),
     "id" => Id(= Ident),
     "insertable" => Insertable((= Insertable)?),
-    "deletable" => Deletable()
+    "deletable" => Deletable(),
+    "order_by" => OrderBy(= String)
 });
 
 impl_parse!(TableFieldAttr {

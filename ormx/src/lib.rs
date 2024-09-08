@@ -1,4 +1,9 @@
-#![cfg(any(feature = "mysql", feature = "postgres", feature = "sqlite", feature = "mariadb"))]
+#![cfg(any(
+    feature = "mysql",
+    feature = "postgres",
+    feature = "sqlite",
+    feature = "mariadb"
+))]
 //! Lightweight derive macros for bringing orm-like features to sqlx.
 //!
 //! # Example: Table
@@ -80,10 +85,15 @@ where
     ) -> impl Future<Output = Result<Self>> + Send + 'a;
 
     /// Stream all rows from this table.
+    /// By default, results are ordered in descending order according to their ID column.
+    /// This can be configured using `#[ormx(order_by = "some_column ASC")]`.
     fn stream_all<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
     ) -> impl Stream<Item = Result<Self>> + Send + 'a;
 
+    /// Streams at most `limit` rows from this table, skipping the first `offset` rows.
+    /// By default, results are ordered in descending order according to their ID column.
+    /// This can be configured using `#[ormx(order_by = "some_column ASC")]`.
     fn stream_all_paginated<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         offset: i64,
@@ -91,12 +101,17 @@ where
     ) -> impl Stream<Item = Result<Self>> + Send + 'a;
 
     /// Load all rows from this table.
+    /// By default, results are ordered in descending order according to their ID column.
+    /// This can be configured using `#[ormx(order_by = "some_column ASC")]`.
     fn all<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
     ) -> impl Future<Output = Result<Vec<Self>>> + Send + 'a {
         Self::stream_all(db).try_collect()
     }
 
+    /// Load at most `limit` rows from this table, skipping the first `offset`.
+    /// By default, results are ordered in descending order according to their ID column.
+    /// This can be configured using `#[ormx(order_by = "some_column ASC")]`.
     fn all_paginated<'a, 'c: 'a>(
         db: impl Executor<'c, Database = Db> + 'a,
         offset: i64,

@@ -20,6 +20,7 @@ pub struct Table<B: Backend> {
     pub fields: Vec<TableField<B>>,
     pub insertable: Option<Insertable>,
     pub deletable: bool,
+    pub order_by: Option<String>,
 }
 
 #[derive(Clone)]
@@ -70,7 +71,12 @@ impl<B: Backend> TableField<B> {
         let q = B::QUOTE;
 
         if self.custom_type {
-            format!("{q}{}{q} AS {q}{}: {}{q}", self.column_name, self.field.to_string(), self.ty.to_token_stream())
+            format!(
+                "{q}{}{q} AS {q}{}: {}{q}",
+                self.column_name,
+                self.field.to_string(),
+                self.ty.to_token_stream()
+            )
         } else if self.field == self.column_name {
             self.column()
         } else {

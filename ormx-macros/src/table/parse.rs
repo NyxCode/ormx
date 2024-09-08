@@ -1,8 +1,8 @@
 use std::{convert::TryFrom, marker::PhantomData};
 
 use proc_macro2::Span;
-use syn::{Data, DeriveInput, Error, Ident, Result};
-use syn::ext::IdentExt;
+use syn::{ext::IdentExt, Data, DeriveInput, Error, Ident, Result};
+
 use super::{Table, TableField};
 use crate::{
     attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr},
@@ -40,7 +40,8 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
                 TableFieldAttr::GetOptional(g) => set_once(&mut get_optional, g)?,
                 TableFieldAttr::GetMany(g) => set_once(&mut get_many, g)?,
                 TableFieldAttr::Set(s) => {
-                    let default = || Ident::new(&format!("set_{}", ident.unraw()), Span::call_site());
+                    let default =
+                        || Ident::new(&format!("set_{}", ident.unraw()), Span::call_site());
                     set_once(&mut set, s.unwrap_or_else(default))?
                 }
                 TableFieldAttr::Default(..) => set_once(&mut default, true)?,
@@ -80,7 +81,7 @@ impl<B: Backend> TryFrom<&DeriveInput> for Table<B> {
             .map(TableField::try_from)
             .collect::<Result<Vec<_>>>()?;
 
-        none!(table, id, insertable, deletable);
+        none!(table, id, insertable, deletable, order_by);
         for attr in parse_attrs::<TableAttr>(&value.attrs)? {
             match attr {
                 TableAttr::Table(x) => set_once(&mut table, x)?,
@@ -93,6 +94,7 @@ impl<B: Backend> TryFrom<&DeriveInput> for Table<B> {
                     set_once(&mut insertable, x.unwrap_or_else(default))?;
                 }
                 TableAttr::Deletable(_) => set_once(&mut deletable, true)?,
+                TableAttr::OrderBy(by) => set_once(&mut order_by, by)?,
             }
         }
 
@@ -123,6 +125,7 @@ impl<B: Backend> TryFrom<&DeriveInput> for Table<B> {
             insertable,
             fields,
             deletable: deletable.unwrap_or(false),
+            order_by,
         })
     }
 }
