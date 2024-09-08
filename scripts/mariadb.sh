@@ -1,10 +1,7 @@
-CONTAINER_ID=$(
-  docker run -it --rm --name ormx-test-mariadb-db \
-    -e MYSQL_DATABASE=ormx \
-    -e MYSQL_ROOT_PASSWORD=admin \
-    -v $(pwd)/scripts/mysql-schema.sql:/docker-entrypoint-initdb.d/schema.sql \
-    -d mariadb
-)
-CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $CONTAINER_ID)
-echo "DATABASE_URL=mysql://root:admin@$CONTAINER_IP/ormx" > .env
-docker attach $CONTAINER_ID
+echo "DATABASE_URL=mysql://root:admin@127.0.0.1/ormx" > .env
+
+docker run -it --rm --name ormx-test-mariadb-db \
+  -e MYSQL_DATABASE=ormx \
+  -e MYSQL_ROOT_PASSWORD=admin \
+  -p 3306:3306 \
+  mariadb:latest

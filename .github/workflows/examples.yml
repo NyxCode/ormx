@@ -8,13 +8,13 @@ on:
       - '*-dev'
 
 jobs:
-  mysql:
-    name: MySQL Example
+  mariadb:
+    name: MariaDB Example
     runs-on: ubuntu-latest
 
     services:
       mysql:
-        image: mysql:latest
+        image: mariadb:latest
         env:
           MYSQL_ROOT_PASSWORD: password
         ports:
@@ -25,19 +25,19 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          key: mysql-examples
+          key: mariadb-examples
 
       - name: Install sqlx-cli
         run: cargo install sqlx-cli
 
       - name: Setup
-        working-directory: example-mysql
+        working-directory: example-mariadb
         env:
           DATABASE_URL: mysql://root:password@localhost:3306/ormx?ssl-mode=disabled
         run: sqlx db setup
 
       - name: Run
-        working-directory: example-mysql
+        working-directory: example-mariadb
         env:
           DATABASE_URL: mysql://root:password@localhost:3306/ormx?ssl-mode=disabled
         run: cargo run
