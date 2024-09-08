@@ -19,7 +19,6 @@ compile_error!("sqlite is currently not supported");
 
 pub trait Backend: Sized + Clone {
     const QUOTE: char;
-    const RESERVED_IDENTS: &'static [&'static str];
     const IS_MYSQL: bool = false;
 
     type Bindings: Iterator<Item = Cow<'static, str>> + Default;

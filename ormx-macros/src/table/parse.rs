@@ -20,14 +20,6 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
     fn try_from(value: &syn::Field) -> Result<Self> {
         let ident = value.ident.clone().unwrap();
 
-        let reserved_ident = B::RESERVED_IDENTS.contains(&&*ident.to_string().to_uppercase());
-        if reserved_ident {
-            proc_macro_error::emit_warning!(
-                ident.span(),
-                "This is a reserved keyword, you might want to consider choosing a different name."
-            );
-        }
-
         none!(
             column,
             custom_type,
@@ -61,7 +53,6 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             field: ident,
             ty: value.ty.clone(),
             custom_type: custom_type.unwrap_or(false),
-            reserved_ident,
             default: default.unwrap_or(false),
             get_one,
             get_optional,

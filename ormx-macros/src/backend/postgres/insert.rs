@@ -61,12 +61,17 @@ fn insert_sql(table: &Table<PgBackend>, insert_fields: &[&TableField<PgBackend>]
     if returning_fields.is_empty() {
         format!(
             "INSERT INTO {} ({}) VALUES ({})",
-            table.table, columns, fields
+            table.name(),
+            columns,
+            fields
         )
     } else {
         format!(
             "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
-            table.table, columns, fields, returning_fields
+            table.name(),
+            columns,
+            fields,
+            returning_fields
         )
     }
 }

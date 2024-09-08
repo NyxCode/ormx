@@ -23,7 +23,7 @@ pub(crate) fn getters<B: Backend>(table: &Table<B>) -> TokenStream {
         let sql = format!(
             "SELECT {} FROM {} WHERE {} = {}",
             column_list,
-            table.table,
+            table.name(),
             field.column(),
             B::Bindings::default().next().unwrap()
         );
@@ -103,7 +103,7 @@ pub fn setters<B: Backend>(table: &Table<B>) -> TokenStream {
             let mut bindings = B::Bindings::default();
             let sql = format!(
                 "UPDATE {} SET {} = {} WHERE {} = {}",
-                table.table,
+                table.name(),
                 field.column(),
                 bindings.next().unwrap(),
                 table.id.column(),

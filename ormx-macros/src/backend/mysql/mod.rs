@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 
-use crate::{backend::Backend, table::Table};
 use proc_macro2::TokenStream;
 use quote::quote;
+
+use crate::{backend::Backend, table::Table};
 
 mod insert;
 
@@ -11,7 +12,6 @@ pub struct MySqlBackend;
 
 impl Backend for MySqlBackend {
     const QUOTE: char = '`';
-    const RESERVED_IDENTS: &'static [&'static str] = &[];
     const IS_MYSQL: bool = true;
 
     type Bindings = MySqlBindings;

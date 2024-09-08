@@ -33,9 +33,8 @@
 use std::future::Future;
 
 use futures::{Stream, TryStreamExt};
-use sqlx::{Executor, Result};
-
 pub use ormx_macros::*;
+use sqlx::{Executor, Result};
 
 #[doc(hidden)]
 pub mod exports {

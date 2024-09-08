@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 
-use crate::{backend::Backend, table::Table};
 use proc_macro2::TokenStream;
 use quote::quote;
+
+use crate::{backend::Backend, table::Table};
 
 mod insert;
 
@@ -11,21 +12,6 @@ pub struct PgBackend;
 
 impl Backend for PgBackend {
     const QUOTE: char = '"';
-    #[rustfmt::skip]
-    const RESERVED_IDENTS: &'static [&'static str] = &[
-        "ALL", "ANALYSE", "ANALYZE", "AND", "ANY", "ARRAY", "AS", "ASC", "ASYMMETRIC",
-        "AUTHORIZATION", "BETWEEN", "BINARY", "BOTH", "CASE", "CAST", "CHECK", "COLLATE", "COLUMN",
-        "CONSTRAINT", "CREATE", "CROSS", "CURRENT_DATE", "CURRENT_ROLE", "CURRENT_TIME",
-        "CURRENT_TIMESTAMP", "CURRENT_USER", "DEFAULT", "DEFERRABLE", "DESC", "DISTINCT", "DO",
-        "ELSE", "END", "EXCEPT", "FALSE", "FETCH", "FOR", "FOREIGN", "FROM", "FREEZE", "FULL",
-        "GRANT", "GROUP", "HAVING", "ILIKE", "IN", "INITIALLY", "INNER", "INTERSECT", "INTO", "IS",
-        "ISNULL", "JOIN", "LATERAL", "LEADING", "LEFT", "LIMIT", "LIKE", "LOCALTIME",
-        "LOCALTIMESTAMP", "NATURAL", "NOT", "NOTNULL", "NULL", "OFFSET", "ON", "ONLY", "OR",
-        "ORDER", "OUTER", "OVERLAPS", "PLACING", "PRIMARY", "REFERENCES", "RETURNING", "RIGHT",
-        "SELECT", "SESSION_USER", "SIMILAR", "SOME", "SYMMETRIC", "TABLE", "TABLESAMPLE", "THEN",
-        "TO", "TRAILING", "TRUE", "UNION", "UNIQUE", "USER", "USING", "VARIADIC", "VERBOSE", "WHEN",
-        "WHERE", "WINDOW", "WITH"
-    ];
     type Bindings = PgBindings;
 
     fn query_result() -> TokenStream {

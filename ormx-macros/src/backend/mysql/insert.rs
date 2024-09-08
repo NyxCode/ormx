@@ -3,8 +3,10 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::Ident;
 
-use crate::backend::mysql::{MySqlBackend, MySqlBindings};
-use crate::table::{Table, TableField};
+use crate::{
+    backend::mysql::{MySqlBackend, MySqlBindings},
+    table::{Table, TableField},
+};
 
 pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
     let insert_ident = match &table.insertable {
@@ -66,12 +68,17 @@ fn insert_sql(table: &Table<MySqlBackend>, insert_fields: &[&TableField<MySqlBac
     if returning_fields.is_empty() {
         format!(
             "INSERT INTO {} ({}) VALUES ({})",
-            table.table, columns, fields
+            table.name(),
+            columns,
+            fields
         )
     } else {
         format!(
             "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
-            table.table, columns, fields, returning_fields
+            table.name(),
+            columns,
+            fields,
+            returning_fields
         )
     }
 }
