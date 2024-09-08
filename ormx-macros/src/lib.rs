@@ -1,4 +1,4 @@
-#![cfg(any(feature = "mysql", feature = "postgres", feature = "sqlite"))]
+#![cfg(any(feature = "mysql", feature = "postgres", feature = "sqlite", feature = "mariadb"))]
 
 mod attrs;
 mod backend;

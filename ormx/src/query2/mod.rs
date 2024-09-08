@@ -1,7 +1,7 @@
 #[doc(hidden)]
 #[rustfmt::skip]
 pub mod map;
-#[cfg(feature = "mysql")]
+#[cfg(any(feature = "mysql", feature = "mariadb"))]
 mod mysql;
 #[cfg(feature = "postgres")]
 mod postgres;

@@ -28,7 +28,9 @@ jobs:
           key: mysql-example
 
       - name: Install sqlx-cli
-        run: cargo install sqlx-cli
+        run: |
+          cargo install sqlx-cli
+          sleep 3
 
       - name: Setup
         working-directory: example-mysql
@@ -63,7 +65,9 @@ jobs:
           key: mariadb-example
 
       - name: Install sqlx-cli
-        run: cargo install sqlx-cli
+        run: | 
+          cargo install sqlx-cli
+          sleep 3
 
       - name: Setup
         working-directory: example-mariadb
@@ -97,7 +101,9 @@ jobs:
           key: postgres-example
 
       - name: Install sqlx-cli
-        run: cargo install sqlx-cli
+        run: |
+          cargo install sqlx-cli
+          sleep 3
 
       - name: Setup
         working-directory: example-postgres
