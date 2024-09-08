@@ -41,7 +41,8 @@ version = "0.8"
 default-features = false
 features = ["macros", "mysql", "runtime-tokio-rustls"]
 ```
-Right now, ormx supports mysql/mariadb and postgres.
+Right now, ormx supports mysql, mariadb and postgres.
+
 ## what does it do? 
 ormx provides macros for generating commonly used sql queries at compile time.  
 ormx is meant to be used together with sqlx. Everything it generates uses `sqlx::query!` under the hood, so every generated query will be checked against your database at compile time.  
@@ -57,8 +58,9 @@ is not what you are looking for.
 if you encounter an issue or have questions, feel free to ask in [`#ormx` on the sqlx discord](https://discord.gg/mrZz4Wv8r2).  
 The documentation currently is not what it should be, so don't be afraid to ask for help.
 
-## [mysql example](https://github.com/NyxCode/ormx/tree/master/example-mysql/src/main.rs)
 ## [postgres example](https://github.com/NyxCode/ormx/tree/master/example-postgres/src/main.rs)
+## [mariadb example](https://github.com/NyxCode/ormx/tree/master/example-mariadb/src/main.rs)
+## [mysql example](https://github.com/NyxCode/ormx/tree/master/example-mysql/src/main.rs)
 ## features
 - `mysql` -  enable support for mysql/mariadb  
 - `postgres` - enable support for postgres  

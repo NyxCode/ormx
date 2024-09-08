@@ -66,7 +66,8 @@ where
 
     /// Insert a row into the database.
     fn insert<'a, 'c: 'a>(
-        db: impl Executor<'c, Database = Db> + 'a,
+        #[cfg(not(feature = "mysql"))] db: impl Executor<'c, Database = Db> + 'a,
+        #[cfg(feature = "mysql")] db: &'c mut sqlx::MySqlConnection,
         row: impl Insert<Table = Self>,
     ) -> impl Future<Output = Result<Self>> + Send + 'a {
         row.insert(db)
@@ -195,7 +196,8 @@ where
     /// Insert a row into the database, returning the inserted row.
     fn insert<'a, 'c: 'a>(
         self,
-        db: impl Executor<'c, Database = Db> + 'a,
+        #[cfg(not(feature = "mysql"))] db: impl Executor<'c, Database = Db> + 'a,
+        #[cfg(feature = "mysql")] db: &'c mut sqlx::MySqlConnection,
     ) -> impl Future<Output = Result<Self::Table>> + Send + 'a;
 }
 

@@ -5,11 +5,15 @@ use proc_macro2::TokenStream;
 use crate::{patch::Patch, table::Table};
 
 mod common;
+#[cfg(feature = "mariadb")]
+mod mariadb;
 #[cfg(feature = "mysql")]
 mod mysql;
 #[cfg(feature = "postgres")]
 mod postgres;
 
+#[cfg(feature = "mariadb")]
+pub type Implementation = mariadb::MariaBackend;
 #[cfg(feature = "mysql")]
 pub type Implementation = mysql::MySqlBackend;
 #[cfg(feature = "postgres")]

@@ -1,10 +1,10 @@
 use itertools::Itertools;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
-use syn::Ident;
 
+use super::MySqlBackend;
 use crate::{
-    backend::mysql::{MySqlBackend, MySqlBindings},
+    backend::mysql::MySqlBindings,
     table::{Table, TableField},
 };
 
@@ -14,23 +14,12 @@ pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
         None => return quote!(),
     };
 
-    let insert_fields: Vec<&TableField<MySqlBackend>> = table.insertable_fields().collect();
-    let default_fields: Vec<&TableField<MySqlBackend>> = table.default_fields().collect();
-
     let table_ident = &table.ident;
-    let insert_field_idents = insert_fields.iter().map(|field| &field.field);
-    let default_field_idents = default_fields.iter().map(|field| &field.field);
-    let default_field_ordinals = (0usize..).take(default_fields.len());
 
-    let insert_sql = insert_sql(table, &insert_fields);
-
-    let insert_field_exprs = insert_fields.iter().map(|f| f.fmt_as_argument());
-
-    let fetch_fn = if default_fields.is_empty() {
-        Ident::new("execute", Span::call_site())
-    } else {
-        Ident::new("fetch_one", Span::call_site())
-    };
+    let insert = insert(table);
+    let query_id = query_id(table);
+    let query_default = query_default(table);
+    let construct_row = construct_row(table);
 
     quote! {
         impl ormx::Insert for #insert_ident {
@@ -38,47 +27,106 @@ pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
 
             async fn insert<'a, 'c: 'a>(
                 self,
-                db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
+                db: &'c mut sqlx::MySqlConnection,
             ) -> sqlx::Result<Self::Table> {
-                use sqlx::Row;
+                use sqlx::Connection;
 
-                let _generated = sqlx::query!(#insert_sql, #( #insert_field_exprs, )*)
-                    .#fetch_fn(db)
-                    .await?;
-
-                Ok(Self::Table {
-                    #( #insert_field_idents: self.#insert_field_idents, )*
-                    #( #default_field_idents: _generated.get(#default_field_ordinals), )*
-                })
+                let mut tx = db.begin().await?;
+                #insert
+                #query_id
+                #query_default
+                tx.commit().await?;
+                Ok(#construct_row)
             }
         }
     }
 }
 
-fn insert_sql(table: &Table<MySqlBackend>, insert_fields: &[&TableField<MySqlBackend>]) -> String {
-    let columns = insert_fields.iter().map(|field| field.column()).join(", ");
-    let fields = MySqlBindings::default()
-        .take(insert_fields.len())
-        .join(", ");
-    let returning_fields = table
+/// build an instance of the table struct from
+/// - `_id` (see `query_id` below)
+/// - `_generated` (see `query_default` below)
+/// - all fields already present in the insert struct
+fn construct_row(table: &Table<MySqlBackend>) -> TokenStream {
+    let id_ident = &table.id.field;
+    let insert_field_idents = table
+        .insertable_fields()
+        .map(|f| &f.field)
+        .filter(|f| *f != id_ident);
+    let default_field_idents = table
         .default_fields()
-        .map(TableField::fmt_for_select)
-        .join(", ");
+        .map(|f| &f.field)
+        .filter(|f| *f != id_ident);
 
-    if returning_fields.is_empty() {
-        format!(
-            "INSERT INTO {} ({}) VALUES ({})",
-            table.name(),
-            columns,
-            fields
-        )
-    } else {
-        format!(
-            "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
-            table.name(),
-            columns,
-            fields,
-            returning_fields
-        )
+    quote! {
+        Self::Table {
+            #id_ident: _id as _,
+            #( #insert_field_idents: self.#insert_field_idents, )*
+            #( #default_field_idents: _generated.#default_field_idents, )*
+        }
+    }
+}
+
+/// queries default fields from the database, except the ID.
+fn query_default(table: &Table<MySqlBackend>) -> TokenStream {
+    let mut default_fields = table
+        .default_fields()
+        .filter(|f| f.field != table.id.field)
+        .peekable();
+
+    if default_fields.peek().is_none() {
+        return quote!();
+    }
+
+    let query_default_sql = format!(
+        "SELECT {} FROM {} WHERE {} = ?",
+        default_fields.map(TableField::fmt_for_select).join(", "),
+        table.name(),
+        table.id.column()
+    );
+
+    quote! {
+        let _generated = sqlx::query!(#query_default_sql, _id)
+            .fetch_one(&mut *tx)
+            .await?;
+    }
+}
+
+/// inserts the struct into the database
+fn insert(table: &Table<MySqlBackend>) -> TokenStream {
+    let insert_fields: Vec<_> = table.insertable_fields().collect();
+    let insert_field_idents = insert_fields.iter().map(|field| &field.field);
+
+    let insert_sql = format!(
+        "INSERT INTO {} ({}) VALUES ({})",
+        table.name(),
+        insert_fields.iter().map(|field| field.column()).join(", "),
+        MySqlBindings.take(insert_fields.len()).join(", ")
+    );
+
+    quote! {
+        sqlx::query!(#insert_sql, #( self.#insert_field_idents, )*)
+            .execute(&mut *tx)
+            .await?;
+    }
+}
+
+/// obtains the id of the inserted row.
+///
+/// case 1:
+///     The ID is database generated, so we query it with LAST_INSERT_ID
+/// case 2:
+///     The ID is already known, so we can just use it.
+fn query_id(table: &Table<MySqlBackend>) -> TokenStream {
+    match table.id.default {
+        true => quote! {
+            let _id = sqlx::query!("SELECT LAST_INSERT_ID() AS id")
+                .fetch_one(&mut *tx)
+                .await?
+                .id;
+        },
+        false => {
+            let id_ident = &table.id.field;
+            quote!(let _id = self.#id_ident;)
+        }
     }
 }

@@ -13,6 +13,7 @@ proc-macro = true
 [features]
 sqlite = []
 mysql = []
+mariadb = []
 postgres = []
 
 [dependencies]

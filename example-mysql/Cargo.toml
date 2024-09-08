@@ -1,11 +1,11 @@
 [package]
-name = "example-mariadb"
+name = "example-mysql"
 version = "0.1.0"
 authors = ["moritz"]
 edition = "2021"
 
 [dependencies]
-ormx = { path = "../ormx", features = ["mariadb"] }
+ormx = { path = "../ormx", features = ["mysql"] }
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"
 dotenv = "0.15"
