@@ -1,6 +1,7 @@
 // #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
-use ormx::{Insert, Table, Delete};
+use log::LevelFilter;
+use ormx::{Delete, Insert, Table};
 use sqlx::PgPool;
 
 // trace_macros!(true);
@@ -13,9 +14,9 @@ mod query2;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Info)
-        .init()?;
+    env_logger::builder()
+        .filter_level(LevelFilter::Debug)
+        .init();
 
     let db = PgPool::connect(&dotenv::var("DATABASE_URL")?).await?;
 

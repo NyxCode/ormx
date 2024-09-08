@@ -1,5 +1,6 @@
 // #![feature(trace_macros)]
 use chrono::{NaiveDateTime, Utc};
+use log::LevelFilter;
 use ormx::{Insert, Table};
 use sqlx::MySqlPool;
 
@@ -13,9 +14,9 @@ mod query2;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Info)
-        .init()?;
+    env_logger::builder()
+        .filter_level(LevelFilter::Debug)
+        .init();
 
     let db = MySqlPool::connect(&dotenv::var("DATABASE_URL")?).await?;
 
