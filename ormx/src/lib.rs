@@ -1,4 +1,4 @@
-#![cfg(any(feature = "mysql", feature = "postgres", feature = "sqlite"))]
+#![cfg(any(feature = "mysql", feature = "postgres", feature = "sqlite", feature = "mariadb"))]
 //! Lightweight derive macros for bringing orm-like features to sqlx.
 //!
 //! # Example: Table
@@ -43,10 +43,10 @@ pub mod exports {
     pub use crate::query2::map::*;
 }
 
-#[cfg(any(feature = "mysql", feature = "postgres"))]
+#[cfg(any(feature = "mysql", feature = "postgres", feature = "mariadb"))]
 mod query2;
 
-#[cfg(feature = "mysql")]
+#[cfg(any(feature = "mysql", feature = "mariadb"))]
 pub type Db = sqlx::MySql;
 #[cfg(feature = "postgres")]
 pub type Db = sqlx::Postgres;
