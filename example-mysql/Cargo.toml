@@ -2,7 +2,7 @@
 name = "example-mysql"
 version = "0.1.0"
 authors = ["moritz"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 ormx = { path = "../ormx", features = ["mysql"] }

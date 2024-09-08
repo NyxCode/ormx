@@ -2,7 +2,7 @@
 name = "ormx-macros"
 version = "0.11.0"
 authors = ["moritz"]
-edition = "2018"
+edition = "2021"
 description = "lightweight procedural macros bringing orm-like features to sqlx"
 homepage = "https://github.com/NyxCode/ormx"
 license = "MIT"
