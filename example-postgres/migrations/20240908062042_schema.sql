@@ -9,7 +9,7 @@ CREATE TABLE users
     last_name  VARCHAR(128) NOT NULL,
     email      VARCHAR(128) NOT NULL UNIQUE,
     role       user_role    NOT NULL,
-    type       account_type NOT NULL,
+    type       account_type,
     "group"    user_group   NOT NULL DEFAULT 'local',
     disabled   TEXT,
     last_login TIMESTAMP DEFAULT NULL

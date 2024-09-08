@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
 
     let db = PgPool::connect(&dotenv::var("DATABASE_URL")?).await?;
 
-    log::info!("insert a new row into the database");
+    log::info!("insert a few new rows into the database");
     let mut new = InsertUser {
         user_id: 1,
         first_name: "Moritz".to_owned(),
@@ -25,7 +25,18 @@ async fn main() -> anyhow::Result<()> {
         email: "moritz.bischof1@gmail.com".to_owned(),
         disabled: None,
         role: Role::User,
-        ty: AccountType::Normal,
+        ty: Some(AccountType::Normal),
+    }
+    .insert(&db)
+    .await?;
+    InsertUser {
+        user_id: 2,
+        first_name: "Dylan".to_owned(),
+        last_name: "Thomas".to_owned(),
+        email: "dylan.thomas@gmail.com".to_owned(),
+        disabled: Some("email not verified".to_owned()),
+        role: Role::Admin,
+        ty: None,
     }
     .insert(&db)
     .await?;
@@ -82,7 +93,7 @@ struct User {
     #[ormx(custom_type)]
     role: Role,
     #[ormx(column = "type", custom_type)]
-    ty: AccountType,
+    ty: Option<AccountType>,
     #[ormx(custom_type, default, set)]
     group: UserGroup,
     disabled: Option<String>,

@@ -72,7 +72,7 @@ impl<B: Backend> TableField<B> {
 
         if self.custom_type {
             format!(
-                "{q}{}{q} AS {q}{}: {}{q}",
+                "{q}{}{q} AS {q}{}!: {}{q}",
                 self.column_name,
                 self.field.to_string(),
                 self.ty.to_token_stream()
