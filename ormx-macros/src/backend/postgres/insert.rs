@@ -61,24 +61,21 @@ pub fn impl_insert(table: &Table<PgBackend>) -> TokenStream {
         Ident::new("fetch_one", Span::call_site())
     };
 
-    let box_future = crate::utils::box_future();
     quote! {
         impl ormx::Insert for #insert_ident {
             type Table = #table_ident;
 
-            fn insert<'a, 'c: 'a>(
+            async fn insert<'a, 'c: 'a>(
                 self,
                 db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
-            ) -> #box_future<'a, sqlx::Result<Self::Table>> {
-                Box::pin(async move {
-                    let _generated = sqlx::query!(#insert_sql, #( #insert_field_exprs, )*)
-                        .#fetch_funtion(db)
-                        .await?;
+            ) -> sqlx::Result<Self::Table> {
+                let _generated = sqlx::query!(#insert_sql, #( #insert_field_exprs, )*)
+                    .#fetch_funtion(db)
+                    .await?;
 
-                    Ok(Self::Table {
-                        #( #insert_field_idents: self.#insert_field_idents, )*
-                        #( #default_field_idents: _generated.#default_field_idents, )*
-                    })
+                Ok(Self::Table {
+                    #( #insert_field_idents: self.#insert_field_idents, )*
+                    #( #default_field_idents: _generated.#default_field_idents, )*
                 })
             }
         }

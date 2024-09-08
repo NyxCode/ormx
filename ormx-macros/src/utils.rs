@@ -1,14 +1,12 @@
-use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use proc_macro2::Span;
 use syn::{Error, Result};
 
-pub fn box_future() -> TokenStream {
-    quote!(ormx::exports::futures::future::BoxFuture)
+macro_rules! stream {
+    ($($t:tt)*) => {
+        quote!(impl ormx::exports::futures::stream::Stream<Item = $($t)*> + Send + Unpin)
+    };
 }
-
-pub fn box_stream() -> TokenStream {
-    quote!(ormx::exports::futures::stream::BoxStream)
-}
+pub(crate) use stream;
 
 pub fn set_once<T>(opt: &mut Option<T>, v: T) -> Result<()> {
     match opt.replace(v) {

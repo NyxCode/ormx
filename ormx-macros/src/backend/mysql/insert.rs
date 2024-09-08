@@ -15,7 +15,6 @@ pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
     };
 
     let table_ident = &table.ident;
-    let box_future = quote!(ormx::exports::futures::future::BoxFuture);
 
     let insert = insert(&table);
     let query_id = query_id(&table);
@@ -26,18 +25,16 @@ pub fn impl_insert(table: &Table<MySqlBackend>) -> TokenStream {
         impl ormx::Insert for #insert_ident {
             type Table = #table_ident;
 
-            fn insert<'a, 'c: 'a>(
+            async fn insert<'a, 'c: 'a>(
                 self,
                 db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
-            ) -> #box_future<'a, sqlx::Result<Self::Table>> {
-                Box::pin(async move {
-                    let mut tx = db.begin().await?;
-                    #insert
-                    #query_id
-                    #query_default
-                    tx.commit().await?;
-                    Ok(#construct_row)
-                })
+            ) -> sqlx::Result<Self::Table> {
+                let mut tx = db.begin().await?;
+                #insert
+                #query_id
+                #query_default
+                tx.commit().await?;
+                Ok(#construct_row)
             }
         }
     }
