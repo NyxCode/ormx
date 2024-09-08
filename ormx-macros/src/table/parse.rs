@@ -2,7 +2,7 @@ use std::{convert::TryFrom, marker::PhantomData};
 
 use proc_macro2::Span;
 use syn::{Data, DeriveInput, Error, Ident, Result};
-
+use syn::ext::IdentExt;
 use super::{Table, TableField};
 use crate::{
     attrs::{parse_attrs, Insertable, TableAttr, TableFieldAttr},
@@ -40,7 +40,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
                 TableFieldAttr::GetOptional(g) => set_once(&mut get_optional, g)?,
                 TableFieldAttr::GetMany(g) => set_once(&mut get_many, g)?,
                 TableFieldAttr::Set(s) => {
-                    let default = || Ident::new(&format!("set_{}", ident), Span::call_site());
+                    let default = || Ident::new(&format!("set_{}", ident.unraw()), Span::call_site());
                     set_once(&mut set, s.unwrap_or_else(default))?
                 }
                 TableFieldAttr::Default(..) => set_once(&mut default, true)?,
@@ -49,7 +49,7 @@ impl<B: Backend> TryFrom<&syn::Field> for TableField<B> {
             }
         }
         Ok(TableField {
-            column_name: column.unwrap_or_else(|| ident.to_string()),
+            column_name: column.unwrap_or_else(|| ident.unraw().to_string()),
             field: ident,
             ty: value.ty.clone(),
             custom_type: custom_type.unwrap_or(false),

@@ -2,7 +2,7 @@ use std::{convert::TryFrom, marker::PhantomData};
 
 use itertools::Itertools;
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{Attribute, DeriveInput, Result, Type, Visibility};
 
 use crate::{
@@ -70,7 +70,7 @@ impl<B: Backend> TableField<B> {
         let q = B::QUOTE;
 
         if self.custom_type {
-            format!("{q}{}{q} AS {q}{}: _{q}", self.column_name, self.field,)
+            format!("{q}{}{q} AS {q}{}: {}{q}", self.column_name, self.field.to_string(), self.ty.to_token_stream())
         } else if self.field == self.column_name {
             self.column()
         } else {

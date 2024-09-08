@@ -25,6 +25,7 @@ async fn main() -> anyhow::Result<()> {
         email: "moritz.bischof1@gmail.com".to_owned(),
         disabled: None,
         role: Role::User,
+        ty: AccountType::Normal,
     }
     .insert(&db)
     .await?;
@@ -76,6 +77,10 @@ struct User {
     email: String,
     #[ormx(custom_type)]
     role: Role,
+    #[ormx(column = "type", custom_type)]
+    ty: AccountType,
+    #[ormx(custom_type, default, set)]
+    group: UserGroup,
     disabled: Option<String>,
     // don't include this field into `InsertUser` since it has a default value
     // generate `User::set_last_login(Option<NaiveDateTime>) -> Result<()>`
@@ -100,6 +105,23 @@ struct UpdateUser {
 enum Role {
     User,
     Admin,
+}
+
+#[derive(Debug, Copy, Clone, sqlx::Type)]
+#[sqlx(type_name = "account_type")]
+#[sqlx(rename_all = "lowercase")]
+enum AccountType {
+    Legacy,
+    Normal,
+}
+
+#[derive(Debug, Copy, Clone, sqlx::Type)]
+#[sqlx(type_name = "user_group")]
+#[sqlx(rename_all = "lowercase")]
+enum UserGroup {
+    Local,
+    Global,
+    Other,
 }
 
 #[derive(Debug, ormx::Table)]

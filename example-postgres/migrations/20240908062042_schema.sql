@@ -1,4 +1,6 @@
 CREATE TYPE user_role AS ENUM ('user', 'admin');
+CREATE TYPE account_type AS ENUM ('legacy', 'normal');
+CREATE TYPE user_group AS ENUM ('local', 'global', 'other');
 
 CREATE TABLE users
 (
@@ -7,6 +9,8 @@ CREATE TABLE users
     last_name  VARCHAR(128) NOT NULL,
     email      VARCHAR(128) NOT NULL UNIQUE,
     role       user_role    NOT NULL,
+    type       account_type NOT NULL,
+    "group"    user_group   NOT NULL DEFAULT 'local',
     disabled   TEXT,
     last_login TIMESTAMP DEFAULT NULL
 );
