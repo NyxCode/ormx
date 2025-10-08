@@ -23,6 +23,12 @@ CREATE TABLE users
     last_login      TIMESTAMP             DEFAULT NULL
 );
 
+CREATE TABLE users_with_string_id
+(
+    id              TEXT PRIMARY KEY,
+    first_name      VARCHAR(128) NOT NULL
+);
+
 CREATE TABLE test
 (
     id   SERIAL PRIMARY KEY,

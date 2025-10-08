@@ -64,7 +64,7 @@ where
     Self: Sized + Send + Sync + 'static,
 {
     /// Type of the ID column of this table.
-    type Id: 'static + Copy + Send;
+    type Id: 'static + Clone + Send;
 
     /// Returns the id of this row.
     fn id(&self) -> Self::Id;

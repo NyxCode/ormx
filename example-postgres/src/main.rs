@@ -57,6 +57,17 @@ struct UpdateUser {
     role: Role,
 }
 
+#[derive(Debug, ormx::Table)]
+#[ormx(table = "users_with_string_id", id = user_id, insertable, deletable)]
+struct UserWithStringId {
+    // `#[ormx(get_one = ..)]` generates `User::get_by_user_id(db, id: String) -> Result<User>` for us
+    #[ormx(column = "id", default, get_one = get_by_user_id)] // map this field to the column "id"
+    user_id: String,
+
+    // just some normal, 'NOT NULL' columns
+    first_name: String,
+}
+
 // these are all enums, created using `CREATE TYPE .. AS ENUM (..);`
 
 #[derive(Debug, Copy, Clone, sqlx::Type)]
@@ -110,7 +121,6 @@ async fn main() -> anyhow::Result<()> {
     let pool = PgPool::connect(&dotenv::var("DATABASE_URL")?).await?;
     let mut tx = pool.begin().await?;
 
-
     info!("insert a new row into the database..");
     let mut new = InsertUser {
         first_name: "Moritz".to_owned(),
@@ -124,12 +134,10 @@ async fn main() -> anyhow::Result<()> {
     .await?;
     info!("after inserting a row, ormx loads the database-generated columns for us, including the ID ({})", new.user_id);
 
-
     info!("update a single field at a time, each in its own query..");
     new.set_last_login(&mut *tx, Some(Utc::now().naive_utc()))
         .await?;
     new.set_group(&mut *tx, UserGroup::Global).await?;
-
 
     info!("update all fields at once..");
     new.email = "asdf".to_owned();
@@ -139,7 +147,6 @@ async fn main() -> anyhow::Result<()> {
         blue: 0,
     });
     new.update(&mut *tx).await?;
-
 
     info!("apply a patch to the user..");
     new.patch(
@@ -153,16 +160,13 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
 
-
     info!("reload the user, in case it has been modified..");
     new.email.clear();
     new.reload(&mut *tx).await?;
 
-
     info!("use the improved query macro for searching users..");
     let search_result = query2::query_users(&mut *tx, Some("NewFirstName"), None).await?;
     info!("found {} matching users", search_result.len());
-
 
     info!("load all users in the order specified by the 'order_by' attribute..");
     User::stream_all_paginated(&mut *tx, 0, 100)
@@ -172,10 +176,8 @@ async fn main() -> anyhow::Result<()> {
         })
         .await?;
 
-
     info!("delete the user from the database..");
     new.delete(&mut *tx).await?;
-
 
     Ok(())
 }

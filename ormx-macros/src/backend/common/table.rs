@@ -21,7 +21,7 @@ pub fn impl_table<B: Backend>(table: &Table<B>) -> TokenStream {
         impl ormx::Table for #table_ident {
             type Id = #id_ty;
 
-            fn id(&self) -> Self::Id { self.#id_ident }
+            fn id(&self) -> Self::Id { self.#id_ident.clone() }
 
             #get
             #stream_all
@@ -55,6 +55,8 @@ fn get<B: Backend>(table: &Table<B>, column_list: &str) -> TokenStream {
         B::Bindings::default().next().unwrap()
     );
 
+    print!("GET SQL: {get_sql}\n");
+
     quote! {
         async fn get<'a, 'c: 'a>(
             db: impl sqlx::Executor<'c, Database = ormx::Db> + 'a,
@@ -83,6 +85,9 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
         table.id.column(),
         bindings.next().unwrap()
     );
+
+    print!("UPDATE SQL: {update_sql}\n");
+
     let id_argument = &table.id.field;
     let other_arguments = table.fields_except_id().map(TableField::fmt_as_argument);
 
@@ -156,6 +161,7 @@ fn delete<B: Backend>(table: &Table<B>) -> TokenStream {
         table.id.column(),
         B::Bindings::default().next().unwrap()
     );
+    print!("DELETE SQL: {delete_sql}\n");
     let query_result = B::query_result();
 
     quote! {
