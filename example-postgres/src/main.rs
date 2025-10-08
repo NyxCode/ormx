@@ -57,6 +57,17 @@ struct UpdateUser {
     role: Role,
 }
 
+#[derive(Debug, ormx::Table)]
+#[ormx(table = "users_with_string_id", id = user_id, insertable, deletable)]
+struct UserWithStringId {
+    // `#[ormx(get_one = ..)]` generates `User::get_by_user_id(db, id: String) -> Result<User>` for us
+    #[ormx(column = "id", default, get_one = get_by_user_id)] // map this field to the column "id"
+    user_id: String,
+
+    // just some normal, 'NOT NULL' columns
+    first_name: String,
+}
+
 // these are all enums, created using `CREATE TYPE .. AS ENUM (..);`
 
 #[derive(Debug, Copy, Clone, sqlx::Type)]

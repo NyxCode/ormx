@@ -21,7 +21,7 @@ pub fn impl_table<B: Backend>(table: &Table<B>) -> TokenStream {
         impl ormx::Table for #table_ident {
             type Id = #id_ty;
 
-            fn id(&self) -> Self::Id { self.#id_ident }
+            fn id(&self) -> Self::Id { self.#id_ident.clone() }
 
             #get
             #stream_all
@@ -83,6 +83,7 @@ fn update<B: Backend>(table: &Table<B>) -> TokenStream {
         table.id.column(),
         bindings.next().unwrap()
     );
+
     let id_argument = &table.id.field;
     let other_arguments = table.fields_except_id().map(TableField::fmt_as_argument);
 
