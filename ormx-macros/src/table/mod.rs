@@ -62,7 +62,13 @@ impl<B: Backend> Table<B> {
 
     pub fn name(&self) -> String {
         let q = B::QUOTE;
-        format!("{q}{}{q}", self.table)
+        // Handle schema-qualified table names (e.g., "schema.table")
+        // by quoting each part separately
+        self.table
+            .split('.')
+            .map(|part| format!("{q}{part}{q}"))
+            .collect::<Vec<_>>()
+            .join(".")
     }
 }
 

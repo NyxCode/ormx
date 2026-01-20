@@ -102,6 +102,17 @@ struct Test {
     rows: Vec<String>,
 }
 
+// Example using a schema-qualified table name
+#[derive(Debug, ormx::Table)]
+#[ormx(table = "app.products", id = id, insertable, deletable)]
+struct Product {
+    #[ormx(default)]
+    id: i32,
+    #[ormx(by_ref)]
+    name: String,
+    price: f64,
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
@@ -175,6 +186,22 @@ async fn main() -> anyhow::Result<()> {
 
     info!("delete the user from the database..");
     new.delete(&mut *tx).await?;
+
+
+    info!("test schema-qualified table name (app.products)..");
+    let product = InsertProduct {
+        name: "Widget".to_owned(),
+        price: 19.99,
+    }
+    .insert(&mut *tx)
+    .await?;
+    info!("inserted product with id {}", product.id);
+
+    let fetched = Product::get(&mut *tx, product.id).await?;
+    info!("fetched product: {:?}", fetched);
+
+    product.delete(&mut *tx).await?;
+    info!("deleted product");
 
 
     Ok(())
